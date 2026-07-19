@@ -4,7 +4,7 @@ set -e
 echo "=== Building Frontend ==="
 cd frontend
 npm install
-node node_modules/vite/bin/vite.js build
+npm run build
 
 echo "=== Copying dist to backend/public ==="
 cd ..
