@@ -1,19 +1,9 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/node",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "http://localhost:3001/api/$1" },
-    { "src": "/(.*)", "dest": "/frontend/$1" }
-  ],
-  "env": {
-    "VITE_API_URL": "@trend_forge_api_url"
-  }
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://trend-forge-api.onrender.com/api/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
