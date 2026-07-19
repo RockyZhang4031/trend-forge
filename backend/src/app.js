@@ -2,6 +2,7 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const compression = require('compression');
 require('dotenv').config();
 
 const themeRoutes = require('./routes/themes');
@@ -15,6 +16,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // ---- Middleware ----
+app.use(compression({ level: 9 }));
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*',
   credentials: true,
@@ -40,9 +42,13 @@ app.use('/api/feeds', feedRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/snapshots', snapshotRoutes);
 
-// ---- Serve Frontend Static Files ----
+// ---- Serve Frontend Static Files (with gzip) ----
 const frontendDist = path.join(__dirname, '../../frontend/dist');
-app.use(express.static(frontendDist));
+app.use(express.static(frontendDist, {
+  setHeaders: (res) => {
+    res.removeHeader('Content-Length');
+  },
+}));
 app.get('*', (req, res) => {
   res.sendFile(path.join(frontendDist, 'index.html'));
 });

@@ -14,7 +14,19 @@ export default defineConfig({
   },
   define: {
     'import.meta.env.VITE_API_URL': JSON.stringify(
-      process.env.VITE_API_URL || 'http://localhost:3001'
+      process.env.VITE_API_URL || ''
     ),
+  },
+  build: {
+    chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'g6-vendor': ['@antv/g6'],
+          'echarts-vendor': ['echarts'],
+        },
+      },
+    },
   },
 });

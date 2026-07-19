@@ -3,7 +3,7 @@ services:
     name: trend-forge-api
     runtime: node
     plan: free
-    buildCommand: cd backend && npm install
+    buildCommand: cd frontend && npm install && npx vite build && cd ../backend && npm install
     startCommand: cd backend && npm start
     healthCheckPath: /health
     envVars:
