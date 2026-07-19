@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 
-
 export default function LifecycleChart({ nodes }) {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
@@ -23,7 +22,6 @@ export default function LifecycleChart({ nodes }) {
   useEffect(() => {
     if (!chartInstance.current || !nodes.length) return;
 
-    // 按生命周期阶段分组统计
     const stages = [
       { name: '萌芽期', range: [0, 20], count: 0 },
       { name: '成长期', range: [20, 40], count: 0 },
@@ -38,26 +36,29 @@ export default function LifecycleChart({ nodes }) {
       s.count++;
     });
 
+    const colors = ['#6C5CE7', '#00F0FF', '#00D9A5', '#FF6B35', '#FF2E63'];
+
     const option = {
       backgroundColor: 'transparent',
-      grid: { left: 50, right: 20, top: 20, bottom: 30 },
+      grid: { left: 40, right: 15, top: 15, bottom: 28 },
       tooltip: {
         trigger: 'axis',
-        backgroundColor: '#1a2332',
-        borderColor: '#2a3a52',
-        textStyle: { color: '#e2e8f0' },
+        backgroundColor: 'rgba(16, 22, 36, 0.9)',
+        borderColor: 'rgba(0, 240, 255, 0.3)',
+        textStyle: { color: '#E8ECF1', fontSize: 12 },
       },
       xAxis: {
         type: 'category',
         data: stages.map((s) => s.name),
-        axisLabel: { color: '#8892a8', fontSize: 11 },
-        axisLine: { lineStyle: { color: '#2a3a52' } },
+        axisLabel: { color: '#8B95A5', fontSize: 10 },
+        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.06)' } },
+        axisTick: { show: false },
       },
       yAxis: {
         type: 'value',
-        axisLabel: { color: '#8892a8', fontSize: 11 },
-        axisLine: { lineStyle: { color: '#2a3a52' } },
-        splitLine: { lineStyle: { color: '#1a2332' } },
+        axisLabel: { color: '#8B95A5', fontSize: 10 },
+        axisLine: { show: false },
+        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.04)' } },
       },
       series: [
         {
@@ -65,11 +66,20 @@ export default function LifecycleChart({ nodes }) {
           data: stages.map((s, i) => ({
             value: s.count,
             itemStyle: {
-              color: ['#6366f1', '#3da0c1', '#10b981', '#f59e0b', '#ef4444'][i],
-              borderRadius: [4, 4, 0, 0],
+              color: {
+                type: 'linear',
+                x: 0, y: 0, x2: 0, y2: 1,
+                colorStops: [
+                  { offset: 0, color: colors[i] },
+                  { offset: 1, color: colors[i] + '33' },
+                ],
+              },
+              borderRadius: [3, 3, 0, 0],
+              shadowColor: colors[i],
+              shadowBlur: 8,
             },
           })),
-          barWidth: '60%',
+          barWidth: '50%',
         },
       ],
     };
@@ -77,7 +87,5 @@ export default function LifecycleChart({ nodes }) {
     chartInstance.current.setOption(option);
   }, [nodes]);
 
-  return (
-    <div ref={chartRef} className="w-full h-full" />
-  );
+  return <div ref={chartRef} className="w-full h-full" />;
 }

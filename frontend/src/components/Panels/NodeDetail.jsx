@@ -1,4 +1,5 @@
-import { NODE_TYPES, EDGE_TYPES, scarcityColor, lifecycleLabel } from '../../types/constants';
+import { motion } from 'framer-motion';
+import { NODE_TYPES, EDGE_TYPES, scarcityColor, lifecycleLabel, lifecycleColor } from '../../types/constants';
 
 export default function NodeDetail({ node, onClose, onTabChange, comments = [] }) {
   if (!node) return null;
@@ -6,110 +7,152 @@ export default function NodeDetail({ node, onClose, onTabChange, comments = [] }
   const typeInfo = NODE_TYPES[node.type] || NODE_TYPES[1];
 
   return (
-    <div className="h-full flex flex-col bg-forge-card border-l border-forge-border">
+    <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-forge-border flex items-center justify-between">
+      <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
         <div className="flex items-center gap-3">
-          <span
-            className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
-            style={{ backgroundColor: scarcityColor(node.scarcity_score) }}
-          >
-            {typeInfo.icon}
-          </span>
+          <div className="relative">
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center text-lg"
+              style={{
+                background: `${typeInfo.color}15`,
+                border: `1px solid ${typeInfo.color}40`,
+                boxShadow: `0 0 16px ${typeInfo.glow}`,
+              }}
+            >
+              {typeInfo.icon}
+            </div>
+          </div>
           <div>
-            <h3 className="text-forge-text font-semibold text-base">{node.name}</h3>
-            <span className="text-xs text-forge-muted">
-              {typeInfo.label} · {lifecycleLabel(node.lifecycle_stage)}
-            </span>
+            <h3 className="text-forge-text font-semibold text-base leading-tight">{node.name}</h3>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span
+                className="text-[10px] px-1.5 py-0.5 rounded font-medium tracking-wider uppercase"
+                style={{
+                  color: typeInfo.color,
+                  background: `${typeInfo.color}10`,
+                  border: `1px solid ${typeInfo.color}30`,
+                }}
+              >
+                {typeInfo.label}
+              </span>
+              <span className="text-[10px] text-forge-text-secondary">
+                {lifecycleLabel(node.lifecycle_stage)}
+              </span>
+            </div>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="text-forge-muted hover:text-forge-text text-xl leading-none"
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-forge-text-secondary hover:text-forge-text hover:bg-white/5 transition-all"
         >
-          ×
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-forge-border">
+      <div className="flex border-b relative" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
         {['detail', 'comments'].map((tab) => (
           <button
             key={tab}
             onClick={() => onTabChange(tab)}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
-              tab === 'detail'
-                ? 'text-forge-primary border-b-2 border-forge-primary'
-                : 'text-forge-muted hover:text-forge-text'
-            }`}
+            className={`flex-1 py-2.5 text-xs font-medium tab-pill ${tab === 'detail' ? 'active' : 'text-forge-text-secondary'}`}
           >
             {tab === 'detail' ? '详情' : `评论 (${comments.length})`}
+            {tab === 'detail' && (
+              <motion.div layoutId="rightTabIndicator" className="pill-indicator" />
+            )}
           </button>
         ))}
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Description */}
         {node.description && (
-          <div className="mb-4">
-            <h4 className="text-xs text-forge-muted uppercase mb-1">描述</h4>
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <h4 className="text-[10px] text-forge-text-tertiary uppercase tracking-wider mb-1.5">描述</h4>
             <p className="text-sm text-forge-text leading-relaxed">{node.description}</p>
-          </div>
+          </motion.div>
         )}
 
         {/* Scores */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="grid grid-cols-2 gap-2"
+        >
           <ScoreCard label="稀缺度" score={node.scarcity_score} color={scarcityColor(node.scarcity_score)} />
-          <ScoreCard label="影响力" score={node.influence_score} color="#3da0c1" />
-          <ScoreCard label="置信度" score={node.confidence_score} color="#6366f1" />
-          <ScoreCard label="生命周期" score={node.lifecycle_stage} color="#8b5cf6" suffix={lifecycleLabel(node.lifecycle_stage)} />
-        </div>
+          <ScoreCard label="影响力" score={node.influence_score} color="#00F0FF" />
+          <ScoreCard label="置信度" score={node.confidence_score} color="#6C5CE7" />
+          <ScoreCard
+            label="生命周期"
+            score={node.lifecycle_stage}
+            color={lifecycleColor(node.lifecycle_stage)}
+            suffix={lifecycleLabel(node.lifecycle_stage)}
+          />
+        </motion.div>
 
         {/* Market Data */}
         {(node.market_size || node.growth_rate) && (
-          <div className="mb-4 p-3 bg-forge-surface rounded-lg">
-            <h4 className="text-xs text-forge-muted uppercase mb-2">市场数据</h4>
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="glass-card rounded-lg p-3"
+          >
+            <h4 className="text-[10px] text-forge-text-tertiary uppercase tracking-wider mb-2">市场数据</h4>
             {node.market_size && (
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-forge-muted">市场规模</span>
-                <span className="text-forge-text">{node.market_size} 亿元</span>
+                <span className="text-forge-text-secondary">市场规模</span>
+                <span className="tnum text-forge-text">{node.market_size} 亿</span>
               </div>
             )}
             {node.growth_rate && (
               <div className="flex justify-between text-sm">
-                <span className="text-forge-muted">增长率</span>
-                <span className="text-success">{node.growth_rate}%</span>
+                <span className="text-forge-text-secondary">增长率</span>
+                <span className="tnum text-forge-accent-growth">+{node.growth_rate}%</span>
               </div>
             )}
-          </div>
+          </motion.div>
         )}
 
-        {/* Evidence placeholder */}
-        <div className="mb-4">
-          <h4 className="text-xs text-forge-muted uppercase mb-2">证据来源</h4>
-          <div className="text-sm text-forge-muted">
-            {node.evidence && node.evidence.length > 0 ? (
-              node.evidence.map((ev) => (
-                <div key={ev.id} className="mb-2 p-2 bg-forge-surface rounded text-xs">
-                  <div className="text-forge-text">{ev.title}</div>
+        {/* Evidence */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+        >
+          <h4 className="text-[10px] text-forge-text-tertiary uppercase tracking-wider mb-2">证据来源</h4>
+          {node.evidence && node.evidence.length > 0 ? (
+            <div className="space-y-2">
+              {node.evidence.map((ev) => (
+                <div key={ev.id} className="glass-card rounded-lg p-2.5">
+                  <div className="text-xs text-forge-text">{ev.title}</div>
                   {ev.url && (
                     <a
                       href={ev.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-forge-primary hover:underline"
+                      className="text-[10px] text-forge-primary hover:underline mt-1 inline-block"
                     >
-                      查看原文
+                      查看原文 →
                     </a>
                   )}
                 </div>
-              ))
-            ) : (
-              <span className="text-xs">暂无证据记录</span>
-            )}
-          </div>
-        </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-forge-text-tertiary">暂无证据记录</p>
+          )}
+        </motion.div>
       </div>
     </div>
   );
@@ -117,18 +160,25 @@ export default function NodeDetail({ node, onClose, onTabChange, comments = [] }
 
 function ScoreCard({ label, score, color, suffix }) {
   return (
-    <div className="p-3 bg-forge-surface rounded-lg">
-      <div className="text-xs text-forge-muted mb-1">{label}</div>
-      <div className="flex items-baseline gap-2">
-        <span className="text-2xl font-bold" style={{ color }}>
+    <div className="glass-card rounded-lg p-2.5 relative overflow-hidden">
+      <div
+        className="absolute top-0 left-0 w-1 h-full"
+        style={{ background: color, boxShadow: `0 0 8px ${color}` }}
+      />
+      <div className="text-[10px] text-forge-text-tertiary uppercase tracking-wider mb-1 ml-1.5">{label}</div>
+      <div className="flex items-baseline gap-1.5 ml-1.5">
+        <span className="text-2xl font-bold tnum" style={{ color }}>
           {typeof score === 'number' ? score.toFixed(0) : score}
         </span>
-        {suffix && <span className="text-xs text-forge-muted">{suffix}</span>}
+        {suffix && <span className="text-[10px] text-forge-text-secondary">{suffix}</span>}
       </div>
-      <div className="mt-2 h-1 bg-forge-bg rounded-full overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all"
-          style={{ width: `${score}%`, backgroundColor: color }}
+      <div className="mt-1.5 ml-1.5 h-0.5 bg-white/5 rounded-full overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${score || 0}%` }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="h-full rounded-full"
+          style={{ background: color, boxShadow: `0 0 4px ${color}` }}
         />
       </div>
     </div>
