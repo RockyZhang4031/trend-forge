@@ -43,29 +43,17 @@ app.use('/api/comments', commentRoutes);
 app.use('/api/snapshots', snapshotRoutes);
 
 // ---- Serve Frontend Static Files (with gzip) ----
-const frontendDist = path.resolve(__dirname, '../../frontend/dist');
-if (require('fs').existsSync(frontendDist)) {
-  app.use(express.static(frontendDist, {
+const publicDir = path.join(__dirname, '../public');
+const fs = require('fs');
+if (fs.existsSync(publicDir)) {
+  app.use(express.static(publicDir, {
     setHeaders: (res) => {
       res.removeHeader('Content-Length');
     },
   }));
   app.get('*', (req, res) => {
-    res.sendFile(path.join(frontendDist, 'index.html'));
+    res.sendFile(path.join(publicDir, 'index.html'));
   });
-} else {
-  // Fallback: serve from backend/public if frontend/dist doesn't exist
-  const publicDir = path.join(__dirname, '../public');
-  if (require('fs').existsSync(publicDir)) {
-    app.use(express.static(publicDir, {
-      setHeaders: (res) => {
-        res.removeHeader('Content-Length');
-      },
-    }));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(publicDir, 'index.html'));
-    });
-  }
 }
 
 // ---- Error Handler ----
