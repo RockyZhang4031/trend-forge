@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
+import { lifecycleLabel } from '../../types/constants';
 
 export default function LifecycleChart({ nodes }) {
   const chartRef = useRef(null);
@@ -7,12 +8,9 @@ export default function LifecycleChart({ nodes }) {
 
   useEffect(() => {
     if (!chartRef.current) return;
-
     chartInstance.current = echarts.init(chartRef.current);
-
     const handleResize = () => chartInstance.current?.resize();
     window.addEventListener('resize', handleResize);
-
     return () => {
       window.removeEventListener('resize', handleResize);
       chartInstance.current?.dispose();
@@ -31,25 +29,24 @@ export default function LifecycleChart({ nodes }) {
     ];
 
     nodes.forEach((n) => {
-      const stage = n.lifecycle_stage || 0;
-      const s = stages.find((s) => stage >= s.range[0] && stage < s.range[1]) || stages[0];
-      s.count++;
+      const stage = n.lifecycle_stage || n.lifecycleStage || 0;
+      const found = stages.find(s => stage >= s.range[0] && stage < s.range[1]);
+      if (found) found.count++;
     });
 
     const colors = ['#6C5CE7', '#00F0FF', '#00D9A5', '#FF6B35', '#FF2E63'];
 
     const option = {
-      backgroundColor: 'transparent',
-      grid: { left: 40, right: 15, top: 15, bottom: 28 },
+      grid: { top: 20, right: 10, bottom: 24, left: 30 },
       tooltip: {
         trigger: 'axis',
-        backgroundColor: 'rgba(16, 22, 36, 0.9)',
-        borderColor: 'rgba(0, 240, 255, 0.3)',
-        textStyle: { color: '#E8ECF1', fontSize: 12 },
+        backgroundColor: 'rgba(5,7,10,0.9)',
+        borderColor: 'rgba(0,240,255,0.3)',
+        textStyle: { color: '#E8ECF1', fontSize: 11 },
       },
       xAxis: {
         type: 'category',
-        data: stages.map((s) => s.name),
+        data: stages.map(s => s.name),
         axisLabel: { color: '#8B95A5', fontSize: 10 },
         axisLine: { lineStyle: { color: 'rgba(255,255,255,0.06)' } },
         axisTick: { show: false },
@@ -60,28 +57,25 @@ export default function LifecycleChart({ nodes }) {
         axisLine: { show: false },
         splitLine: { lineStyle: { color: 'rgba(255,255,255,0.04)' } },
       },
-      series: [
-        {
-          type: 'bar',
-          data: stages.map((s, i) => ({
-            value: s.count,
-            itemStyle: {
-              color: {
-                type: 'linear',
-                x: 0, y: 0, x2: 0, y2: 1,
-                colorStops: [
-                  { offset: 0, color: colors[i] },
-                  { offset: 1, color: colors[i] + '33' },
-                ],
-              },
-              borderRadius: [3, 3, 0, 0],
-              shadowColor: colors[i],
-              shadowBlur: 8,
+      series: [{
+        type: 'bar',
+        data: stages.map((s, i) => ({
+          value: s.count,
+          itemStyle: {
+            color: {
+              type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+              colorStops: [
+                { offset: 0, color: colors[i] },
+                { offset: 1, color: colors[i] + '20' },
+              ],
             },
-          })),
-          barWidth: '50%',
-        },
-      ],
+            borderRadius: [3, 3, 0, 0],
+            shadowColor: colors[i],
+            shadowBlur: 8,
+          },
+        })),
+        barWidth: '50%',
+      }],
     };
 
     chartInstance.current.setOption(option);

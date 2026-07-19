@@ -1,0 +1,173 @@
+import { motion, AnimatePresence } from 'framer-motion';
+import { useStore } from '../../store/useStore';
+import CommentSection from '../Comments/CommentSection';
+
+const NODE_COLORS = {
+  technology: '#00F0FF',
+  person: '#FF6B35',
+  company: '#6C5CE7',
+  resource: '#FFD700',
+  concept: '#00D9A5',
+};
+
+const NODE_ICONS = {
+  technology: '⚙️',
+  person: '👤',
+  company: '🏢',
+  resource: '💎',
+  concept: '🚀',
+};
+
+export default function NodeDetailHUD({ themeId }) {
+  const store = useStore();
+  const node = store.nodes.find(n => n.id === store.selectedNodeId);
+
+  return (
+    <AnimatePresence>
+      {store.detailPanelOpen && node && (
+        <motion.aside
+          initial={{ x: 384, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: 384, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          className="fixed right-0 top-12 bottom-0 z-50 w-96 flex flex-col"
+          style={{
+            background: 'rgba(10, 14, 23, 0.85)',
+            backdropFilter: 'blur(24px)',
+            borderLeft: '1px solid rgba(0,240,255,0.1)',
+          }}
+        >
+          {/* 扫描线 */}
+          <div className="h-px w-full" style={{
+            background: 'linear-gradient(90deg, transparent, #00F0FF, transparent)',
+            opacity: 0.5,
+          }} />
+
+          {/* 头部 */}
+          <div className="p-4 flex items-start gap-3 shrink-0">
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center text-lg shrink-0"
+              style={{
+                background: `${NODE_COLORS[node.type]}15`,
+                border: `1px solid ${NODE_COLORS[node.type]}40`,
+                boxShadow: `0 0 16px ${NODE_COLORS[node.type]}60`,
+              }}>
+              {NODE_ICONS[node.type] || '●'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-bold text-[#E8ECF1] truncate">{node.name}</h3>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-[10px] px-1.5 py-0.5 rounded font-mono"
+                  style={{ background: `${NODE_COLORS[node.type]}20`, color: NODE_COLORS[node.type], border: `1px solid ${NODE_COLORS[node.type]}30` }}>
+                  {node.type}
+                </span>
+                <span className="text-[10px] font-mono text-[#4A5568]">
+                  {node.tags?.slice(0, 2).join(' · ') || ''}
+                </span>
+              </div>
+            </div>
+            <button className="text-lg text-[#4A5568] hover:text-[#E8ECF1] shrink-0" onClick={() => store.closePanel()}>×</button>
+          </div>
+
+          {/* 描述 */}
+          <div className="px-4 pb-3 shrink-0">
+            <p className="text-xs leading-relaxed text-[#8B95A5]">{node.description || '暂无描述'}</p>
+          </div>
+
+          {/* 指标 */}
+          <div className="px-4 pb-3 grid grid-cols-3 gap-2 shrink-0">
+            <MetricCard label="热度" value={node.heat} color="#00F0FF" />
+            <MetricCard label="稀缺度" value={node.scarcity} color="#FF6B35" />
+            <MetricCard label="影响力" value={node.heat} color="#00D9A5" />
+          </div>
+
+          {/* 标签 */}
+          {node.tags?.length > 0 && (
+            <div className="px-4 pb-3 flex flex-wrap gap-1 shrink-0">
+              {node.tags.map(tag => (
+                <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-[#8B95A5]">{tag}</span>
+              ))}
+            </div>
+          )}
+
+          {/* 标签页切换 */}
+          <div className="flex border-y border-white/[0.06] shrink-0">
+            {[
+              { key: 'detail', label: '详情' },
+              { key: 'comments', label: '评论' },
+            ].map(tab => (
+              <button
+                key={tab.key}
+                className={`flex-1 py-2 text-xs relative transition-colors ${store.rightPanelTab === tab.key ? 'text-[#00F0FF]' : 'text-[#8B95A5]'}`}
+                onClick={() => store.setPanelTab(tab.key)}
+              >
+                {tab.label}
+                {store.rightPanelTab === tab.key && (
+                  <motion.div layoutId="detail-tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#00F0FF]" style={{ boxShadow: '0 0 8px rgba(0,240,255,0.6)' }} />
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* 内容区 */}
+          <div className="flex-1 overflow-y-auto">
+            {store.rightPanelTab === 'comments' ? (
+              <CommentSection themeId={themeId} nodeId={node.id} />
+            ) : (
+              <div className="p-4 text-xs text-[#8B95A5]">
+                <div className="text-[10px] uppercase tracking-wider mb-2 text-[#4A5568]">生命周期</div>
+                <div className="mb-3">{node.lifecycleLabel || '成长期'}</div>
+                <div className="text-[10px] uppercase tracking-wider mb-2 text-[#4A5568]">关联节点</div>
+                <RelatedNodes nodeId={node.id} />
+              </div>
+            )}
+          </div>
+        </motion.aside>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function MetricCard({ label, value, color }) {
+  return (
+    <div className="p-2.5 rounded-lg relative overflow-hidden" style={{ background: 'rgba(0,0,0,0.3)' }}>
+      <div className="absolute top-0 left-0 w-0.5 h-full" style={{ background: color, boxShadow: `0 0 8px ${color}` }} />
+      <div className="text-[10px] uppercase tracking-wider text-[#4A5568] ml-1.5">{label}</div>
+      <div className="text-xl font-bold font-mono ml-1.5" style={{ color }}>{value || 0}</div>
+      <div className="mt-1 ml-1.5 h-0.5 bg-white/5 rounded-full overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${value || 0}%` }}
+          transition={{ duration: 0.6 }}
+          className="h-full rounded-full"
+          style={{ background: color }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function RelatedNodes({ nodeId }) {
+  const { edges, nodes } = useStore();
+  const related = edges
+    .filter(e => (e.source === nodeId || e.target === nodeId) || (e.source_node_id === nodeId || e.target_node_id === nodeId))
+    .map(e => {
+      const otherId = e.source === nodeId || e.source_node_id === nodeId ? (e.target || e.target_node_id) : (e.source || e.source_node_id);
+      return nodes.find(n => n.id === otherId);
+    })
+    .filter(Boolean);
+
+  if (!related.length) return <div className="text-[#4A5568]">暂无关联节点</div>;
+
+  return (
+    <div className="space-y-1">
+      {related.map(n => (
+        <div key={n.id} className="flex items-center gap-2 p-1.5 rounded hover:bg-white/5 cursor-pointer"
+          onClick={() => useStore.getState().selectNode(n.id)}>
+          <div className="w-2 h-2 rounded-full" style={{ background: NODE_COLORS[n.type] || '#00F0FF' }} />
+          <span className="text-[#E8ECF1]">{n.name}</span>
+          <span className="text-[10px] font-mono text-[#4A5568] ml-auto">{n.heat}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
