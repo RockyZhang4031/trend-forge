@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -39,9 +40,11 @@ app.use('/api/feeds', feedRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/snapshots', snapshotRoutes);
 
-// ---- 404 ----
-app.use((req, res) => {
-  res.status(404).json({ error: 'Not Found', path: req.path });
+// ---- Serve Frontend Static Files ----
+const frontendDist = path.join(__dirname, '../../frontend/dist');
+app.use(express.static(frontendDist));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendDist, 'index.html'));
 });
 
 // ---- Error Handler ----
