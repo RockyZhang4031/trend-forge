@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: trend-forge-api
+    runtime: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: AI_PROVIDER
+        value: glm
+      - key: GLM_API_KEY
+        sync: false
+      - key: GLM_API_URL
+        value: https://open.bigmodel.cn/api/paas/v4
+      - key: AI_MODEL
+        value: glm-4-flash
+      - key: CORS_ORIGIN
+        sync: false

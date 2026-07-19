@@ -1,0 +1,60 @@
+const express = require('express');
+const cors = require('cors');
+const morgan = require('morgan');
+require('dotenv').config();
+
+const themeRoutes = require('./routes/themes');
+const nodeRoutes = require('./routes/nodes');
+const edgeRoutes = require('./routes/edges');
+const feedRoutes = require('./routes/feeds');
+const commentRoutes = require('./routes/comments');
+const snapshotRoutes = require('./routes/snapshots');
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+// ---- Middleware ----
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  credentials: true,
+}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
+
+// ---- Health Check ----
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'trend-forge-api',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// ---- API Routes ----
+app.use('/api/themes', themeRoutes);
+app.use('/api/nodes', nodeRoutes);
+app.use('/api/edges', edgeRoutes);
+app.use('/api/feeds', feedRoutes);
+app.use('/api/comments', commentRoutes);
+app.use('/api/snapshots', snapshotRoutes);
+
+// ---- 404 ----
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not Found', path: req.path });
+});
+
+// ---- Error Handler ----
+app.use((err, req, res, next) => {
+  console.error('[Error]', err.message);
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal Server Error',
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Trend Forge API running on http://localhost:${PORT}`);
+  console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
+});
+
+module.exports = app;
