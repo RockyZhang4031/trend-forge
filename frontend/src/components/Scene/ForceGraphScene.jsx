@@ -29,7 +29,9 @@ export default function ForceGraphScene({ nodes, edges }) {
         toneMapping: THREE.ACESFilmicToneMapping,
         toneMappingExposure: 1.2,
       }}
-      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+      // 确保容器尺寸变化时 Canvas 正确 resize
+      resize={{ scroll: false, debounce: { scroll: 50, resize: 0 } }}
+      style={{ width: '100%', height: '100%', display: 'block' }}
     >
       <CameraRig />
       <ambientLight intensity={0.3} />

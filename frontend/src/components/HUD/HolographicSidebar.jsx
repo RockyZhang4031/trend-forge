@@ -11,12 +11,47 @@ const NODE_COLORS = {
   concept: '#00D9A5',
 };
 
-export default function HolographicSidebar({ themeId }) {
+export default function HolographicSidebar({ themeId, isMobile }) {
   const store = useStore();
-  const selectedNode = store.nodes.find(n => n.id === store.selectedNodeId);
   const theme = store.currentTheme;
   const heatScore = theme?.heat_score || 78;
 
+  // 手机端：抽屉式覆盖 + 背景遮罩
+  if (isMobile) {
+    return (
+      <AnimatePresence>
+        {store.sidebarOpen && (
+          <>
+            {/* 遮罩 */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/60"
+              onClick={() => store.toggleSidebar()}
+            />
+            {/* 抽屉 */}
+            <motion.div
+              initial={{ x: -300 }}
+              animate={{ x: 0 }}
+              exit={{ x: -300 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="fixed left-0 top-0 h-full z-50 w-[280px] flex flex-col"
+              style={{
+                background: 'rgba(10, 14, 23, 0.95)',
+                backdropFilter: 'blur(20px)',
+                borderRight: '1px solid rgba(0,240,255,0.15)',
+              }}
+            >
+              <SidebarContent store={store} theme={theme} heatScore={heatScore} themeId={themeId} />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    );
+  }
+
+  // 桌面端：固定侧边栏
   return (
     <motion.div
       className="fixed left-0 top-0 h-full z-50 flex flex-col"
@@ -29,6 +64,14 @@ export default function HolographicSidebar({ themeId }) {
         borderRight: '1px solid rgba(255,255,255,0.06)',
       }}
     >
+      <SidebarContent store={store} theme={theme} heatScore={heatScore} themeId={themeId} />
+    </motion.div>
+  );
+}
+
+function SidebarContent({ store, theme, heatScore, themeId }) {
+  return (
+    <>
       {/* Logo 区 */}
       <div className="h-14 flex items-center px-4 border-b border-white/[0.06] shrink-0">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center mr-3 shrink-0"
@@ -163,6 +206,6 @@ export default function HolographicSidebar({ themeId }) {
       >
         {store.sidebarOpen ? '◀' : '▶'}
       </button>
-    </motion.div>
+    </>
   );
 }
