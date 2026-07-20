@@ -25,39 +25,55 @@ export default function NodeDetailHUD({ themeId, isMobile }) {
   return (
     <AnimatePresence>
       {store.detailPanelOpen && node && (
-        <motion.div
-          key="overlay"
-          initial={isMobile ? { y: '100%' } : { x: 384, opacity: 0 }}
-          animate={isMobile ? { y: 0 } : { x: 0, opacity: 1 }}
-          exit={isMobile ? { y: '100%' } : { x: 384, opacity: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className={isMobile
-            ? 'fixed left-0 right-0 bottom-0 z-50 max-h-[70vh] flex flex-col rounded-t-2xl'
-            : 'fixed right-0 top-12 bottom-0 z-50 w-96 flex flex-col'
-          }
-          style={{
-            background: 'rgba(10, 14, 23, 0.95)',
-            backdropFilter: 'blur(24px)',
-            borderLeft: isMobile ? 'none' : '1px solid rgba(0,240,255,0.1)',
-            borderTop: isMobile ? '1px solid rgba(0,240,255,0.2)' : 'none',
-            boxShadow: isMobile ? '0 -8px 40px rgba(0,0,0,0.6)' : 'none',
-          }}
-        >
-          {/* 手机端拖拽指示条 */}
+        <>
+          {/* 手机端：点击背景遮罩关闭 */}
           {isMobile && (
-            <div className="pt-2 pb-1 flex justify-center shrink-0">
-              <div className="w-10 h-1 rounded-full bg-white/20" />
-            </div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/50"
+              onClick={() => store.closePanel()}
+            />
           )}
 
-          {/* 扫描线 */}
-          <div className="h-px w-full shrink-0" style={{
-            background: 'linear-gradient(90deg, transparent, #00F0FF, transparent)',
-            opacity: 0.5,
-          }} />
+          <motion.div
+            key="overlay"
+            initial={isMobile ? { y: '100%' } : { x: 384, opacity: 0 }}
+            animate={isMobile ? { y: 0 } : { x: 0, opacity: 1 }}
+            exit={isMobile ? { y: '100%' } : { x: 384, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className={isMobile
+              ? 'fixed left-0 right-0 bottom-0 z-50 max-h-[70vh] flex flex-col rounded-t-2xl'
+              : 'fixed right-0 top-12 bottom-0 z-50 w-96 flex flex-col'
+            }
+            style={{
+              background: 'rgba(10, 14, 23, 0.95)',
+              backdropFilter: 'blur(24px)',
+              borderLeft: isMobile ? 'none' : '1px solid rgba(0,240,255,0.1)',
+              borderTop: isMobile ? '1px solid rgba(0,240,255,0.2)' : 'none',
+              boxShadow: isMobile ? '0 -8px 40px rgba(0,0,0,0.6)' : 'none',
+            }}
+          >
+            {/* 手机端拖拽指示条 — 也可以下拉关闭 */}
+            {isMobile && (
+              <div
+                className="pt-2.5 pb-1.5 flex justify-center shrink-0 cursor-pointer"
+                onClick={() => store.closePanel()}
+              >
+                <div className="w-12 h-1.5 rounded-full bg-white/25" />
+              </div>
+            )}
 
-          <PanelContent node={node} store={store} themeId={themeId} isMobile={isMobile} />
-        </motion.div>
+            {/* 扫描线 */}
+            <div className="h-px w-full shrink-0" style={{
+              background: 'linear-gradient(90deg, transparent, #00F0FF, transparent)',
+              opacity: 0.5,
+            }} />
+
+            <PanelContent node={node} store={store} themeId={themeId} isMobile={isMobile} />
+          </motion.div>
+        </>
       )}
     </AnimatePresence>
   );
@@ -69,7 +85,7 @@ function PanelContent({ node, store, themeId, isMobile }) {
 
   return (
     <>
-      {/* 头部 */}
+      {/* 头部 — 关闭按钮加大到 44x44 触摸区 */}
       <div className="p-4 flex items-start gap-3 shrink-0">
         <div className="w-11 h-11 rounded-xl flex items-center justify-center text-lg shrink-0"
           style={{
@@ -91,7 +107,14 @@ function PanelContent({ node, store, themeId, isMobile }) {
             ))}
           </div>
         </div>
-        <button className="text-lg text-[#4A5568] hover:text-[#E8ECF1] shrink-0" onClick={() => store.closePanel()}>×</button>
+        {/* 关闭按钮 — 44x44 最小触摸区 */}
+        <button
+          className="w-11 h-11 flex items-center justify-center text-xl text-[#8B95A5] hover:text-[#E8ECF1] hover:bg-white/5 rounded-lg transition-colors shrink-0"
+          onClick={() => store.closePanel()}
+          aria-label="关闭"
+        >
+          ✕
+        </button>
       </div>
 
       {/* 描述 */}
@@ -115,7 +138,7 @@ function PanelContent({ node, store, themeId, isMobile }) {
         </div>
       )}
 
-      {/* 标签页切换 */}
+      {/* 标签页切换 — 触摸区加大 */}
       <div className="flex border-y border-white/[0.06] shrink-0">
         {[
           { key: 'detail', label: '详情' },
@@ -123,7 +146,7 @@ function PanelContent({ node, store, themeId, isMobile }) {
         ].map(tab => (
           <button
             key={tab.key}
-            className={`flex-1 py-2 text-xs relative transition-colors ${store.rightPanelTab === tab.key ? 'text-[#00F0FF]' : 'text-[#8B95A5]'}`}
+            className={`flex-1 py-3 text-xs relative transition-colors ${store.rightPanelTab === tab.key ? 'text-[#00F0FF]' : 'text-[#8B95A5]'}`}
             onClick={() => store.setPanelTab(tab.key)}
           >
             {tab.label}
@@ -185,7 +208,7 @@ function RelatedNodes({ nodeId }) {
   return (
     <div className="space-y-1">
       {related.map(n => (
-        <div key={n.id} className="flex items-center gap-2 p-1.5 rounded hover:bg-white/5 cursor-pointer"
+        <div key={n.id} className="flex items-center gap-2 p-2 rounded hover:bg-white/5 cursor-pointer"
           onClick={() => useStore.getState().selectNode(n.id)}>
           <div className="w-2 h-2 rounded-full" style={{ background: NODE_COLORS[n.type] || '#00F0FF' }} />
           <span className="text-[#E8ECF1]">{n.name}</span>

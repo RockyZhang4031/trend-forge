@@ -55,10 +55,16 @@ export default function App() {
 
   return (
     <div className="w-screen h-screen overflow-hidden relative" style={{ background: '#05070A' }}>
-      {/* 3D 画布层 — 动态适配侧边栏宽度 */}
+      {/* 3D 画布层 — 动态适配侧边栏宽度，点击空白关闭详情 */}
       <div
         className="absolute top-0 right-0 bottom-0 transition-[left] duration-300 ease-out"
         style={{ left: canvasLeft }}
+        onPointerDown={(e) => {
+          // 点击画布空白区域（非节点）关闭详情面板
+          if (e.target.tagName === 'CANVAS' && store.detailPanelOpen) {
+            store.closePanel();
+          }
+        }}
       >
         <ForceGraphScene nodes={store.nodes} edges={store.edges} />
       </div>
