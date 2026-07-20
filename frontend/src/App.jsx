@@ -7,6 +7,7 @@ import HolographicSidebar from './components/HUD/HolographicSidebar';
 import TopStatusBar from './components/HUD/TopStatusBar';
 import NodeDetailHUD from './components/HUD/NodeDetailHUD';
 import BottomConsole from './components/HUD/BottomConsole';
+import InsightsDashboard from './components/HUD/InsightsDashboard';
 
 export default function App() {
   const store = useStore();
@@ -65,6 +66,7 @@ export default function App() {
       {/* 2D UI 覆盖层 */}
       <HolographicSidebar themeId={themeId} isMobile={isMobile} />
       <TopStatusBar isMobile={isMobile} />
+      <InsightsDashboard isMobile={isMobile} />
       <NodeDetailHUD themeId={themeId} isMobile={isMobile} />
       <BottomConsole isMobile={isMobile} />
     </div>

@@ -42,7 +42,8 @@ export default function HolographicNode({ node, onClick }) {
   const isDimmed = store.selectedNodeId && store.selectedNodeId !== node.id;
 
   const baseColor = NODE_COLORS[node.type] || '#00F0FF';
-  const scale = 1 + (node.heat / 100) * 0.8;
+  // 拉大差距：热度 0 → 0.6x，热度 100 → 2.2x，一眼看出谁重要
+  const scale = 0.6 + (node.heat / 100) * 1.6;
   const icon = NODE_ICONS[node.type] || '●';
 
   const wireframeGeo = useMemo(() => new THREE.IcosahedronGeometry(1.2, 1), []);
@@ -125,7 +126,7 @@ export default function HolographicNode({ node, onClick }) {
           transmission={0.6}
           thickness={1}
           emissive={baseColor}
-          emissiveIntensity={showLabel ? 0.8 : 0.3}
+          emissiveIntensity={showLabel ? 1.0 : (0.2 + (node.heat / 100) * 0.6)}
         />
         {/* 内部线框 */}
         <mesh geometry={wireframeGeo}>
