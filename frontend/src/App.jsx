@@ -14,6 +14,7 @@ export default function App() {
   const { isMobile } = useResponsive();
   const [themeId, setThemeId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [introPhase, setIntroPhase] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -32,12 +33,17 @@ export default function App() {
     })();
   }, []);
 
-  // 手机端默认折叠侧边栏
+  // 导演式入场动画序列
   useEffect(() => {
-    if (isMobile && store.sidebarOpen) {
-      store.toggleSidebar();
-    }
-  }, [isMobile]);
+    if (loading || !store.nodes.length) return;
+    const timers = [
+      setTimeout(() => setIntroPhase(1), 300),   // 主题标题亮起
+      setTimeout(() => setIntroPhase(2), 1000),  // 核心节点诞生
+      setTimeout(() => setIntroPhase(3), 1800),  // 连线射出
+      setTimeout(() => setIntroPhase(4), 2600),  // 卫星节点浮现
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [loading, store.nodes.length]);
 
   if (loading) {
     return (
@@ -50,23 +56,21 @@ export default function App() {
     );
   }
 
-  // 桌面端：画布根据侧边栏宽度调整 left；手机端：画布全屏
   const canvasLeft = isMobile ? 0 : (store.sidebarOpen ? 300 : 60);
 
   return (
     <div className="w-screen h-screen overflow-hidden relative" style={{ background: '#05070A' }}>
-      {/* 3D 画布层 — 动态适配侧边栏宽度，点击空白关闭详情 */}
+      {/* 3D 画布层 */}
       <div
         className="absolute top-0 right-0 bottom-0 transition-[left] duration-300 ease-out"
         style={{ left: canvasLeft }}
         onPointerDown={(e) => {
-          // 点击画布空白区域（非节点）关闭详情面板
           if (e.target.tagName === 'CANVAS' && store.detailPanelOpen) {
             store.closePanel();
           }
         }}
       >
-        <ForceGraphScene nodes={store.nodes} edges={store.edges} />
+        <ForceGraphScene nodes={store.nodes} edges={store.edges} introPhase={introPhase} />
       </div>
 
       {/* 2D UI 覆盖层 */}

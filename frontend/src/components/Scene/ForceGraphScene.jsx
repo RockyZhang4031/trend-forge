@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo } from 'react';
+import { useRef, useEffect, useMemo, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Html, Billboard } from '@react-three/drei';
@@ -10,8 +10,7 @@ import QuantumEdge from './QuantumEdge';
 import CameraRig from './CameraRig';
 
 /**
- * 单一动画驱动器 — 替代 23+24 个 useFrame
- * 每帧遍历 node refs 更新旋转/呼吸，性能从 47 回调降到 1
+ * 单一动画驱动器
  */
 function NodeAnimator({ nodeRefs, nodes }) {
   useFrame((state) => {
@@ -20,36 +19,66 @@ function NodeAnimator({ nodeRefs, nodes }) {
       const ref = nodeRefs.current[nodes[i].id];
       if (!ref) continue;
       const heat = nodes[i].heat || 50;
-      // 呼吸
       const breathe = 1 + Math.sin(t * 1.5 + heat * 0.1) * 0.04;
       ref.scale.setScalar(breathe);
-      // 旋转
       ref.rotation.x = t * 0.15;
-      ref.rotation.y = t * 0.25;
-      // 悬浮
-      ref.position.y = (nodes[i].y || 0) + Math.sin(t * 0.5 + heat) * 0.2;
+      ref.rotation.y = t * 0.2;
     }
   });
-  return null;
 }
 
 /**
- * 主题标识
+ * 主题锚点 — 中央全息标题
  */
-function ThemeCenter({ theme }) {
-  if (!theme) return null;
+function ThemeAnchor({ theme, introPhase }) {
+  const [visible, setVisible] = useState(true);
+  const [shrunk, setShrunk] = useState(false);
+
+  useEffect(() => {
+    if (introPhase >= 4) {
+      const t1 = setTimeout(() => setShrunk(true), 2000);
+      const t2 = setTimeout(() => setVisible(false), 3500);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [introPhase]);
+
+  if (!visible || !theme) return null;
+
   return (
     <Billboard position={[0, 0, 0]}>
       <Html center style={{ pointerEvents: 'none' }}>
-        <div className="px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap"
-          style={{
-            background: 'rgba(0, 240, 255, 0.08)',
-            border: '1px solid rgba(0, 240, 255, 0.2)',
-            color: 'rgba(0, 240, 255, 0.4)',
-            backdropFilter: 'blur(8px)',
-            letterSpacing: '0.1em',
+        <div style={{
+          padding: shrunk ? '6px 16px' : '16px 28px',
+          borderRadius: '12px',
+          background: 'rgba(8, 12, 20, 0.85)',
+          border: '1px solid rgba(0, 240, 255, 0.2)',
+          backdropFilter: 'blur(16px)',
+          textAlign: 'center',
+          transition: 'all 0.8s ease',
+          opacity: introPhase >= 1 ? 1 : 0,
+        }}>
+          <div style={{
+            fontSize: shrunk ? '12px' : '18px',
+            fontWeight: 700,
+            color: '#00F0FF',
+            textShadow: '0 0 12px rgba(0,240,255,0.5)',
+            transition: 'font-size 0.8s ease',
           }}>
-          {theme.name}
+            {theme.name}
+          </div>
+          {!shrunk && (
+            <>
+              <div style={{ width: '60%', height: '1px', margin: '8px auto', background: 'linear-gradient(90deg, transparent, #00F0FF, transparent)' }} />
+              <div style={{ fontSize: '11px', color: '#8B95A5', maxWidth: '280px', lineHeight: 1.5 }}>
+                {theme.description}
+              </div>
+              <div style={{ marginTop: '8px', display: 'flex', gap: '12px', justifyContent: 'center', fontSize: '10px', fontFamily: 'monospace' }}>
+                <span style={{ color: '#FF6B35' }}>热度 {Math.round(theme.heat_score || 0)}</span>
+                <span style={{ color: '#00F0FF' }}>节点 {useStore.getState().nodes.length}</span>
+                <span style={{ color: '#6C5CE7' }}>关系 {useStore.getState().edges.length}</span>
+              </div>
+            </>
+          )}
         </div>
       </Html>
     </Billboard>
@@ -73,71 +102,82 @@ function AutoFitView({ nodes, layoutStable, controlsRef }) {
         if (n.x !== undefined) box.expandByPoint(new THREE.Vector3(n.x, n.y, n.z || 0));
       });
       if (box.isEmpty()) return;
-
       const center = box.getCenter(new THREE.Vector3());
-      const radius = Math.max(1, box.getBoundingSphere(new THREE.Sphere()).radius);
+      const sphere = box.getBoundingSphere(new THREE.Sphere());
       const fov = camera.fov * Math.PI / 180;
-      const aspect = size.width / Math.max(1, size.height);
-      const dist = Math.max(radius / Math.tan(fov / 2), radius / (Math.tan(fov / 2) * aspect)) * 1.6 + 20;
-
-      const dir = new THREE.Vector3(0.5, 0.7, 1).normalize();
-      camera.position.copy(center).add(dir.multiplyScalar(dist));
+      const hDist = sphere.radius / Math.tan(fov / 2);
+      const vDist = sphere.radius / Math.tan((fov * size.height / size.width) / 2);
+      const dist = Math.max(hDist, vDist, 35) * 1.6;
+      camera.position.set(center.x + dist * 0.4, center.y + dist * 0.5, center.z + dist);
       camera.lookAt(center);
       if (controlsRef.current) {
         controlsRef.current.target.copy(center);
         controlsRef.current.update();
       }
     }, 100);
-  }, [layoutStable, nodes, camera, size, controlsRef]);
+  }, [layoutStable]);
 
   return null;
 }
 
 /**
- * 主场景
+ * 主图谱场景
  */
-export default function ForceGraphScene({ nodes, edges }) {
-  const controlsRef = useRef(null);
-  const nodeRefs = useRef({});
-  const currentTheme = useStore(s => s.currentTheme);
+export default function ForceGraphScene({ nodes, edges, introPhase }) {
+  const { nodes: simNodes, edges: simEdges, layoutStable, positionsRef } = useForceSimulation(nodes, edges, {
+    charge: -400, linkDistance: 25, collideRadius: 6, depth: 80,
+  });
+
   const selectNode = useStore(s => s.selectNode);
   const hoverNode = useStore(s => s.hoverNode);
+  const selectedNodeId = useStore(s => s.selectedNodeId);
+  const hoveredNodeId = useStore(s => s.hoveredNodeId);
+  const currentTheme = useStore(s => s.currentTheme);
+  const controlsRef = useRef(null);
+  const nodeRefs = useRef({});
 
-  const { nodes: simNodes, edges: simEdges, layoutStable } = useForceSimulation(nodes, edges);
-
-  // 构建 source/target 位置索引，避免每个 edge 做 find
+  // 构建 node 位置索引
   const nodePosMap = useMemo(() => {
-    const map = new Map();
-    simNodes.forEach(n => map.set(n.id, { x: n.x, y: n.y, z: n.z }));
-    return map;
+    const m = new Map();
+    simNodes.forEach(n => m.set(n.id, { x: n.x || 0, y: n.y || 0, z: n.z || 0 }));
+    return m;
   }, [simNodes]);
+
+  // 计算选中节点的关联节点集合
+  const relatedIds = useMemo(() => {
+    if (!selectedNodeId) return null;
+    const set = new Set([selectedNodeId]);
+    simEdges.forEach(e => {
+      const sid = typeof e.source === 'string' ? e.source : e.source.id;
+      const tid = typeof e.target === 'string' ? e.target : e.target.id;
+      if (sid === selectedNodeId) set.add(tid);
+      if (tid === selectedNodeId) set.add(sid);
+    });
+    return set;
+  }, [selectedNodeId, simEdges]);
 
   return (
     <Canvas
-      camera={{ position: [0, 20, 50], fov: 55, near: 0.1, far: 1000 }}
-      gl={{
-        antialias: true,
-        alpha: true,
-        toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 1.2,
-        powerPreference: 'high-performance',
-      }}
-      dpr={[1, 1.5]}
+      camera={{ position: [0, 10, 50], fov: 55, near: 0.1, far: 1000 }}
+      gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.2 }}
       resize={{ scroll: false, debounce: { scroll: 50, resize: 0 } }}
       style={{ width: '100%', height: '100%', display: 'block' }}
     >
       <CameraRig controlsRef={controlsRef} />
       <AutoFitView nodes={simNodes} layoutStable={layoutStable} controlsRef={controlsRef} />
-      <NodeAnimator nodeRefs={nodeRefs} nodes={simNodes} />
-
       <ambientLight intensity={0.4} />
       <pointLight position={[10, 20, 10]} intensity={0.6} color="#00F0FF" />
       <pointLight position={[-10, -10, -10]} intensity={0.3} color="#6C5CE7" />
       <directionalLight position={[5, 10, 5]} intensity={0.4} color="#ffffff" />
 
       <ParticleBackground count={300} />
-      <ThemeCenter theme={currentTheme} />
+
+      {/* 主题锚点 */}
+      <ThemeAnchor theme={currentTheme} introPhase={introPhase} />
+
       <gridHelper args={[200, 50, '#1a2030', '#1a2030']} position={[0, -30, 0]} />
+
+      <NodeAnimator nodeRefs={nodeRefs} nodes={simNodes} />
 
       {simNodes.map(node => (
         <HolographicNode
@@ -147,6 +187,9 @@ export default function ForceGraphScene({ nodes, edges }) {
           onClick={selectNode}
           onHover={hoverNode}
           onLeave={() => hoverNode(null)}
+          selectedNodeId={selectedNodeId}
+          hoveredNodeId={hoveredNodeId}
+          relatedIds={relatedIds}
         />
       ))}
 
@@ -159,6 +202,8 @@ export default function ForceGraphScene({ nodes, edges }) {
             edge={edge}
             sourcePos={nodePosMap.get(sid)}
             targetPos={nodePosMap.get(tid)}
+            selectedNodeId={selectedNodeId}
+            relatedIds={relatedIds}
           />
         );
       })}
