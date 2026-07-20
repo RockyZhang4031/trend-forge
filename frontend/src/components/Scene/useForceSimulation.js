@@ -4,6 +4,8 @@ import { forceSimulation, forceManyBody, forceCenter, forceLink, forceCollide } 
 /**
  * D3-Force 驱动的力导向布局 Hook
  * 2D 布局计算 + Z 轴深度映射
+ * 
+ * 改进：布局稳定后自动 fitView，确保所有节点都在视野内
  */
 export function useForceSimulation(nodes, edges, options = {}) {
   const {
@@ -15,12 +17,13 @@ export function useForceSimulation(nodes, edges, options = {}) {
 
   const [simulatedNodes, setSimulatedNodes] = useState(nodes);
   const [simulatedEdges, setSimulatedEdges] = useState(edges);
+  const [layoutStable, setLayoutStable] = useState(false);
   const simRef = useRef(null);
 
   useEffect(() => {
     if (!nodes.length) return;
 
-    // 深拷贝，避免修改原数据
+    setLayoutStable(false);
     const simNodes = nodes.map(n => ({ ...n }));
     const simLinks = edges.map(e => ({ ...e }));
 
@@ -50,13 +53,23 @@ export function useForceSimulation(nodes, edges, options = {}) {
         }));
         setSimulatedNodes(updated);
         setSimulatedEdges([...simLinks]);
+      })
+      .on('end', () => {
+        // 布局稳定
+        setLayoutStable(true);
       });
 
     simRef.current = sim;
     sim.alpha(1).restart();
 
-    return () => sim.stop();
+    // 安全兜底：如果 3 秒后还没 end（alpha 没降到 0），强制标记稳定
+    const safetyTimer = setTimeout(() => setLayoutStable(true), 3000);
+
+    return () => {
+      sim.stop();
+      clearTimeout(safetyTimer);
+    };
   }, [nodes.length, edges.length, charge, linkDistance, collideRadius, depth]);
 
-  return { nodes: simulatedNodes, edges: simulatedEdges };
+  return { nodes: simulatedNodes, edges: simulatedEdges, layoutStable };
 }
