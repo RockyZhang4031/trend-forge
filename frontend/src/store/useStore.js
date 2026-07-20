@@ -41,7 +41,9 @@ export const useStore = create((set, get) => ({
       const mappedEdges = (data.edges || []).map(e => ({
         id: e.id, source: e.source_node_id, target: e.target_node_id,
         type: EDGE_TYPE_MAP[e.type] || 'belongs',
+        weight: e.weight || 50,
         strength: (e.weight || 50) / 100,
+        confidence: e.confidence_score || 50,
       }));
       set({ currentTheme: data, nodes: mappedNodes, edges: mappedEdges, loading: false });
       try {
