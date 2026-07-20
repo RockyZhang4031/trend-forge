@@ -32,6 +32,7 @@ export default function InsightsDashboard({ isMobile }) {
   const nodes = useStore(s => s.nodes);
   const edgesCount = useStore(s => s.edges.length);
   const selectNode = useStore(s => s.selectNode);
+  const flyToNode = useStore(s => s.flyToNode);
   const [collapsed, setCollapsed] = useState(false);
 
   const stats = useMemo(() => {
@@ -85,7 +86,7 @@ export default function InsightsDashboard({ isMobile }) {
           <div className="text-[9px] uppercase tracking-wider text-[#4A5568] mb-1">🔥 热度 TOP 3</div>
           {stats.byHeat.slice(0, 3).map((n, i) => (
             <div key={n.id} className="flex items-center gap-1.5 py-0.5 cursor-pointer"
-              onClick={() => selectNode(n.id)}
+              onClick={() => { selectNode(n.id); flyToNode(n.id); }}
             >
               <span className="text-[10px] font-mono text-[#4A5568] w-3">{i + 1}</span>
               <span className="text-[10px] text-[#E8ECF1] flex-1 truncate">{n.name}</span>

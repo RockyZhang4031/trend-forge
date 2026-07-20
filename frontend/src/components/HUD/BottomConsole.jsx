@@ -12,7 +12,7 @@ export default function BottomConsole({ isMobile }) {
   ]);
 
   const [visible, setVisible] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true); // 默认收起
 
   useEffect(() => {
     if (store.nodes.length > 0) {
