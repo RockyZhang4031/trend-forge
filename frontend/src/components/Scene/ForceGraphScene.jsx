@@ -120,7 +120,7 @@ export default function ForceGraphScene({ nodes, edges }) {
       {/* 主题标识 */}
       <ThemeCenter theme={currentTheme} />
 
-      <gridHelper args={[200, 50, 'rgba(255,255,255,0.02)', 'rgba(255,255,255,0.02)']} position={[0, -30, 0]} />
+      <gridHelper args={[200, 50, '#1a2030', '#1a2030']} position={[0, -30, 0]} />
 
       {simNodes.map(node => (
         <HolographicNode

@@ -30,6 +30,7 @@ const NODE_LABELS = {
  */
 export default function InsightsDashboard({ isMobile }) {
   const nodes = useStore(s => s.nodes);
+  const edgesCount = useStore(s => s.edges.length);
   const selectNode = useStore(s => s.selectNode);
   const [collapsed, setCollapsed] = useState(false);
 
@@ -125,7 +126,7 @@ export default function InsightsDashboard({ isMobile }) {
       {/* 关键指标卡 */}
       <div className="grid grid-cols-2 gap-1.5 mb-2">
         <MetricCard label="节点总数" value={nodes.length} color="#00F0FF" />
-        <MetricCard label="关系总数" value={useStore(s => s.edges.length)} color="#6C5CE7" />
+        <MetricCard label="关系总数" value={edgesCount} color="#6C5CE7" />
         <MetricCard label="平均热度" value={Math.round(stats.avgHeat)} color="#FF6B35" />
         <MetricCard label="平均稀缺" value={Math.round(stats.avgScarcity)} color="#FF2E63" />
       </div>
