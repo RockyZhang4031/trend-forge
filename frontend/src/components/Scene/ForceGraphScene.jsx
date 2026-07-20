@@ -59,7 +59,7 @@ export default function ForceGraphScene({ nodes, edges }) {
     charge: -400,
     linkDistance: 25,
     collideRadius: 6,
-    depth: 40,
+    depth: 80,
   });
 
   const selectNode = useStore(s => s.selectNode);
