@@ -7,12 +7,11 @@ import { useStore } from '../../store/useStore';
 /**
  * 相机控制器
  * 
- * 自由模式：OrbitControls 接管，用户自由拖拽/旋转/缩放
- * 飞行模式：点击节点时触发，平滑飞到目标，完成后交还控制权
+ * 自由模式：OrbitControls 接管
+ * 飞行模式：点击节点触发，完成后交还控制权
  */
-export default function CameraRig() {
-  const { camera, gl } = useThree();
-  const controlsRef = useRef(null);
+export default function CameraRig({ controlsRef }) {
+  const { camera } = useThree();
   const flyTarget = useRef(null);
   const flyLookAt = useRef(null);
   const isFlying = useRef(false);
@@ -26,7 +25,6 @@ export default function CameraRig() {
 
     const [tx, ty, tz] = store.cameraTarget;
 
-    // 记录起始位置
     startPos.current.copy(camera.position);
     if (controlsRef.current.target) {
       startLookAt.current.copy(controlsRef.current.target);
@@ -37,7 +35,7 @@ export default function CameraRig() {
     flyProgress.current = 0;
     isFlying.current = true;
     controlsRef.current.enabled = false;
-  }, [store.cameraTarget, camera]);
+  }, [store.cameraTarget, camera, controlsRef]);
 
   useFrame((_, delta) => {
     if (isFlying.current && flyTarget.current && controlsRef.current) {
@@ -71,7 +69,7 @@ export default function CameraRig() {
       zoomSpeed={0.8}
       panSpeed={0.6}
       minDistance={8}
-      maxDistance={120}
+      maxDistance={150}
       maxPolarAngle={Math.PI * 0.75}
       minPolarAngle={Math.PI * 0.25}
       mouseButtons={{
