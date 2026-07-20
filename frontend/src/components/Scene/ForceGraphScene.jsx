@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { Html, Billboard } from '@react-three/drei';
 import { useStore } from '../../store/useStore';
 import { useForceSimulation } from './useForceSimulation';
 import ParticleBackground from './ParticleBackground';
@@ -9,10 +10,32 @@ import QuantumEdge from './QuantumEdge';
 import CameraRig from './CameraRig';
 
 /**
+ * 主题标识 — 在 3D 空间中央显示主题名
+ */
+function ThemeCenter({ theme }) {
+  if (!theme) return null;
+  return (
+    <Billboard position={[0, 0, 0]}>
+      <Html center style={{ pointerEvents: 'none' }}>
+        <div
+          className="px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap"
+          style={{
+            background: 'rgba(0, 240, 255, 0.08)',
+            border: '1px solid rgba(0, 240, 255, 0.2)',
+            color: 'rgba(0, 240, 255, 0.4)',
+            backdropFilter: 'blur(8px)',
+            letterSpacing: '0.1em',
+          }}
+        >
+          {theme.name}
+        </div>
+      </Html>
+    </Billboard>
+  );
+}
+
+/**
  * 布局稳定后自动 fitView
- * 
- * 关键：必须同步 OrbitControls 的 target，否则下一帧被覆盖
- * 必须考虑画布宽高比，竖屏时用垂直 FOV 算距离
  */
 function AutoFitView({ nodes, layoutStable, controlsRef }) {
   const { camera, size } = useThree();
@@ -33,40 +56,26 @@ function AutoFitView({ nodes, layoutStable, controlsRef }) {
       if (box.isEmpty()) return;
 
       const center = box.getCenter(new THREE.Vector3());
-      const sizeBox = box.getSize(new THREE.Vector3());
-      const radius = box.getBoundingSphere(new THREE.Sphere()).radius;
+      const sphere = box.getBoundingSphere(new THREE.Sphere());
+      const radius = Math.max(1, sphere.radius);
 
-      const fov = camera.fov * (Math.PI / 180);
-      const aspect = size.width / size.height;
+      const fov = camera.fov * Math.PI / 180;
+      const aspect = size.width / Math.max(1, size.height);
 
-      // 水平和垂直方向各自需要的距离，取较大值
-      const hDist = radius / Math.tan(fov / 2) / aspect;
-      const vDist = radius / Math.tan(fov / 2);
-      let distance = Math.max(hDist, vDist);
-
-      // padding：节点越大需要越多边距
-      const padding = 1.6;
-      distance *= padding;
-      distance = Math.max(distance, 30);
+      const hDist = radius / Math.tan(fov / 2);
+      const vDist = radius / (Math.tan(fov / 2) * aspect);
+      let distance = Math.max(hDist, vDist) * 1.6 + 20;
 
       // 3/4 俯视角
-      const angle = Math.PI / 5;
-      const targetPos = new THREE.Vector3(
-        center.x + distance * 0.15,
-        center.y + distance * Math.sin(angle),
-        center.z + distance * Math.cos(angle)
-      );
-
-      camera.position.copy(targetPos);
+      const dir = new THREE.Vector3(0.5, 0.7, 1).normalize();
+      camera.position.copy(center).add(dir.multiplyScalar(distance));
       camera.lookAt(center);
-      camera.updateProjectionMatrix();
 
-      // 关键：同步 OrbitControls target，否则下一帧被覆盖
       if (controlsRef.current) {
         controlsRef.current.target.copy(center);
         controlsRef.current.update();
       }
-    }, 200);
+    }, 150);
   }, [layoutStable, nodes, camera, size, controlsRef]);
 
   return null;
@@ -76,6 +85,8 @@ function AutoFitView({ nodes, layoutStable, controlsRef }) {
  * 主图谱场景
  */
 export default function ForceGraphScene({ nodes, edges }) {
+  const controlsRef = useRef(null);
+  const currentTheme = useStore(s => s.currentTheme);
   const { nodes: simNodes, edges: simEdges, layoutStable } = useForceSimulation(nodes, edges, {
     charge: -400,
     linkDistance: 25,
@@ -84,11 +95,10 @@ export default function ForceGraphScene({ nodes, edges }) {
   });
 
   const selectNode = useStore(s => s.selectNode);
-  const controlsRef = useRef(null);
 
   return (
     <Canvas
-      camera={{ position: [10, 25, 50], fov: 55, near: 0.1, far: 1000 }}
+      camera={{ position: [0, 20, 50], fov: 55, near: 0.1, far: 1000 }}
       gl={{
         antialias: true,
         alpha: true,
@@ -103,10 +113,14 @@ export default function ForceGraphScene({ nodes, edges }) {
       <ambientLight intensity={0.4} />
       <pointLight position={[10, 20, 10]} intensity={0.6} color="#00F0FF" />
       <pointLight position={[-10, -10, -10]} intensity={0.3} color="#6C5CE7" />
+      <directionalLight position={[5, 10, 5]} intensity={0.4} color="#ffffff" />
 
-      <ParticleBackground count={1200} />
+      <ParticleBackground count={1000} />
 
-      <gridHelper args={[200, 50, 'rgba(255,255,255,0.03)', 'rgba(255,255,255,0.03)']} position={[0, -30, 0]} />
+      {/* 主题标识 */}
+      <ThemeCenter theme={currentTheme} />
+
+      <gridHelper args={[200, 50, 'rgba(255,255,255,0.02)', 'rgba(255,255,255,0.02)']} position={[0, -30, 0]} />
 
       {simNodes.map(node => (
         <HolographicNode
