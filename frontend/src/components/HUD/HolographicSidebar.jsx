@@ -1,7 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { lazy, Suspense } from 'react';
 import { useStore } from '../../store/useStore';
-import LifecycleChart from '../Graph/LifecycleChart';
 import FeedPanel from '../Panels/FeedPanel';
+
+// ECharts 懒加载，不阻塞首屏
+const LifecycleChart = lazy(() => import('../Graph/LifecycleChart'));
 
 const NODE_COLORS = {
   technology: '#00F0FF',
@@ -160,7 +163,9 @@ function SidebarContent({ store, theme, heatScore, themeId }) {
               {store.sidebarTab === 'lifecycle' ? (
                 <div className="h-full flex flex-col">
                   <div className="flex-1 min-h-0">
-                    <LifecycleChart nodes={store.nodes} />
+                    <Suspense fallback={<div className="flex items-center justify-center h-full text-[10px] text-[#4A5568]">加载图表...</div>}>
+                      <LifecycleChart nodes={store.nodes} />
+                    </Suspense>
                   </div>
                   {/* 节点列表 */}
                   <div className="h-48 overflow-y-auto p-2 border-t border-white/[0.06]">

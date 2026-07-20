@@ -1,49 +1,33 @@
 import { useEffect, useRef, useState } from 'react';
-import { forceSimulation, forceManyBody, forceCenter, forceLink, forceCollide, forceRadial } from 'd3-force';
+import { forceSimulation, forceManyBody, forceCenter, forceLink, forceCollide } from 'd3-force';
 
 /**
- * D3-Force 驱动的力导向布局 Hook
+ * D3-Force 布局 — 性能优先版
  * 
- * 改进：非线性 weight 映射 + 低 alpha 持续微动
+ * 核心优化：不在每次 tick 调 setState，用 ref 存位置
+ * 只在布局稳定后做一次 React state 更新
  * 
- * 非线性映射（类 sigmoid 激活函数）：
- * - weight 60→strength 0.15（弱关联，拉得很松）
- * - weight 80→strength 0.55（中等）
- * - weight 95→strength 0.95（强关联，紧密贴合）
- * 这样强弱关系的距离差异被放大 6 倍，肉眼可辨
- * 
- * 持续微动：
- * - 布局稳定后不彻底停止，保持 alpha=0.02 的极低能量
- * - 节点有轻微漂移，图"活着"而非冻结
+ * 期间通过 positionsRef 让 3D 组件直接读取最新位置
+ * 避免 23 个组件 × 300+ tick = 6900+ 次 re-render
  */
 
-// 非线性映射函数：将 weight 0-100 映射为 link strength 0-1
-// 使用 sigmoid 变体，放大中段差异
 function weightToStrength(weight) {
   const w = Math.max(0, Math.min(100, weight || 50));
-  // 归一化到 -1 ~ 1
-  const x = (w - 50) / 50;
-  // sigmoid: 1/(1+e^(-4x))，4 倍增益让中段差异明显
-  return 1 / (1 + Math.exp(-4 * x));
+  return 1 / (1 + Math.exp(-4 * (w - 50) / 50));
 }
 
-// weight 映射为连线目标距离：强关系近，弱关系远
-function weightToDistance(weight, baseDistance) {
-  const s = weightToStrength(weight);
-  // 强关系 distance = baseDistance * 0.3，弱关系 = baseDistance * 2.0
-  return baseDistance * (2.0 - s * 1.7);
+function weightToDistance(weight, base) {
+  return base * (2.0 - weightToStrength(weight) * 1.7);
 }
 
-// 节点热度映射为排斥力强度：热度高的节点排斥力更大（占地盘）
-function heatToCharge(heat) {
-  const h = (heat || 50) / 100;
-  return -300 - h * -400; // -300(冷) ~ -700(热)
-}
+const TYPE_Z_OFFSET = {
+  technology: 25, person: -15, company: 10, resource: -25, concept: 0,
+};
 
 export function useForceSimulation(nodes, edges, options = {}) {
   const {
     charge = -400,
-    linkDistance = 30,
+    linkDistance = 25,
     collideRadius = 6,
     depth = 80,
   } = options;
@@ -51,15 +35,10 @@ export function useForceSimulation(nodes, edges, options = {}) {
   const [simulatedNodes, setSimulatedNodes] = useState(nodes);
   const [simulatedEdges, setSimulatedEdges] = useState(edges);
   const [layoutStable, setLayoutStable] = useState(false);
+  
+  // ref 存实时位置，3D 组件直接读取，跳过 React
+  const positionsRef = useRef(new Map());
   const simRef = useRef(null);
-
-  const TYPE_Z_OFFSET = {
-    technology: 25,
-    person: -15,
-    company: 10,
-    resource: -25,
-    concept: 0,
-  };
 
   useEffect(() => {
     if (!nodes.length) return;
@@ -68,7 +47,7 @@ export function useForceSimulation(nodes, edges, options = {}) {
     const simNodes = nodes.map(n => ({ ...n }));
     const simLinks = edges.map(e => ({ ...e }));
 
-    // 初始位置：球面随机分布
+    // 初始位置：球面分布
     simNodes.forEach(n => {
       if (n.x === undefined) {
         const r = Math.random() * 3;
@@ -79,47 +58,56 @@ export function useForceSimulation(nodes, edges, options = {}) {
       }
     });
 
+    let tickCount = 0;
+
     const sim = forceSimulation(simNodes)
-      .velocityDecay(0.4)  // 阻尼，运动更柔和
-      .force('charge', forceManyBody().strength(d => heatToCharge(d.heat)))
+      .velocityDecay(0.4)
+      .alphaDecay(0.05)   // 快速收敛，约 50 tick 稳定
+      .force('charge', forceManyBody().strength(d => -300 - (d.heat || 50) / 100 * 400))
       .force('center', forceCenter(0, 0))
       .force('collide', forceCollide(collideRadius))
       .force('link', forceLink(simLinks)
         .id(d => d.id)
-        .distance(d => weightToDistance(d.weight || (d.strength ? d.strength * 100 : 50), linkDistance))
-        .strength(d => weightToStrength(d.weight || (d.strength ? d.strength * 100 : 50)))
+        .distance(d => weightToDistance(d.weight || 50, linkDistance))
+        .strength(d => weightToStrength(d.weight || 50))
       )
       .on('tick', () => {
-        const updated = simNodes.map(n => {
+        tickCount++;
+        // 只更新 ref，不触发 React re-render
+        simNodes.forEach(n => {
           const heatZ = ((n.heat || 50) / 100) * depth - depth / 2;
-          const typeZ = (TYPE_Z_OFFSET[n.type] || 0);
+          const typeZ = TYPE_Z_OFFSET[n.type] || 0;
           const seed = n.id ? n.id.charCodeAt(0) + n.id.charCodeAt(n.id.length - 1) : 0;
-          const jitterZ = Math.sin(seed * 1.7) * 15;
-          
-          return {
-            ...n,
+          positionsRef.current.set(n.id, {
             x: n.x,
             y: n.y,
-            z: heatZ + typeZ + jitterZ,
-          };
+            z: heatZ + typeZ + Math.sin(seed * 1.7) * 15,
+          });
         });
-        setSimulatedNodes(updated);
-        setSimulatedEdges([...simLinks]);
       })
       .on('end', () => {
+        // 稳定后做一次 React state 更新
+        const finalNodes = simNodes.map(n => {
+          const pos = positionsRef.current.get(n.id) || { x: n.x, y: n.y, z: 0 };
+          return { ...n, x: pos.x, y: pos.y, z: pos.z };
+        });
+        setSimulatedNodes(finalNodes);
+        setSimulatedEdges([...simLinks]);
         setLayoutStable(true);
       });
 
     simRef.current = sim;
-    sim.alpha(1).restart();
 
+    // 安全兜底：800ms 后强制稳定
     const safetyTimer = setTimeout(() => {
+      if (!positionsRef.current.size) return;
+      const finalNodes = simNodes.map(n => {
+        const pos = positionsRef.current.get(n.id) || { x: n.x, y: n.y, z: 0 };
+        return { ...n, x: pos.x, y: pos.y, z: pos.z };
+      });
+      setSimulatedNodes(finalNodes);
       setLayoutStable(true);
-      // 布局稳定后不彻底停止，保持低 alpha 微动
-      if (simRef.current) {
-        simRef.current.alpha(0.03).alphaTarget(0.001).restart();
-      }
-    }, 3000);
+    }, 800);
 
     return () => {
       sim.stop();
@@ -127,5 +115,5 @@ export function useForceSimulation(nodes, edges, options = {}) {
     };
   }, [nodes.length, edges.length, charge, linkDistance, collideRadius, depth]);
 
-  return { nodes: simulatedNodes, edges: simulatedEdges, layoutStable };
+  return { nodes: simulatedNodes, edges: simulatedEdges, layoutStable, positionsRef };
 }

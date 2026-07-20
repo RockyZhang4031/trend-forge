@@ -22,7 +22,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'echarts-vendor': ['echarts'],
           'three-vendor': ['three', '@react-three/fiber', '@react-three/drei'],
         },
       },
