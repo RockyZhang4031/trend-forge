@@ -105,16 +105,24 @@ function AutoFitView({ nodes, layoutStable, controlsRef }) {
       const center = box.getCenter(new THREE.Vector3());
       const sphere = box.getBoundingSphere(new THREE.Sphere());
       const fov = camera.fov * Math.PI / 180;
-      const hDist = sphere.radius / Math.tan(fov / 2);
-      const vDist = sphere.radius / Math.tan((fov * size.height / size.width) / 2);
-      const dist = Math.max(hDist, vDist, 35) * 1.6;
-      camera.position.set(center.x + dist * 0.4, center.y + dist * 0.5, center.z + dist);
+      const aspect = size.width / size.height;
+
+      // 水平方向需要的距离
+      const hFov = 2 * Math.atan(Math.tan(fov / 2) * aspect);
+      const hDist = sphere.radius / Math.tan(hFov / 2);
+      // 垂直方向需要的距离
+      const vDist = sphere.radius / Math.tan(fov / 2);
+      // 取较大值确保两个方向都能装下，再留 2.2 倍余量给标签和 HUD
+      const dist = Math.max(hDist, vDist, 40) * 2.2;
+
+      camera.position.set(center.x + dist * 0.35, center.y + dist * 0.45, center.z + dist);
       camera.lookAt(center);
+      camera.updateProjectionMatrix();
       if (controlsRef.current) {
         controlsRef.current.target.copy(center);
         controlsRef.current.update();
       }
-    }, 100);
+    }, 150);
   }, [layoutStable]);
 
   return null;

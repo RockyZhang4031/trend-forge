@@ -69,7 +69,7 @@ export default function CameraRig({ controlsRef }) {
       zoomSpeed={0.8}
       panSpeed={0.6}
       minDistance={8}
-      maxDistance={150}
+      maxDistance={300}
       maxPolarAngle={Math.PI * 0.75}
       minPolarAngle={Math.PI * 0.25}
       mouseButtons={{
