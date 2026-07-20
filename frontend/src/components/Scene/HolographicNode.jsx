@@ -35,9 +35,9 @@ function getTier(node) {
   return 'minor';                          // 卫星：heat < 72
 }
 
-const TIER_SIZES = { major: 3.0, medium: 1.8, minor: 0.9 };
-const TIER_EMISSIVE = { major: 1.2, medium: 0.5, minor: 0.15 };
-const TIER_OPACITY = { major: 0.95, medium: 0.85, minor: 0.5 };
+const TIER_SIZES = { major: 2.0, medium: 1.2, minor: 0.6 };
+const TIER_EMISSIVE = { major: 1.0, medium: 0.4, minor: 0.12 };
+const TIER_OPACITY = { major: 0.95, medium: 0.8, minor: 0.45 };
 
 /**
  * 3D 节点 — 恒星/行星/卫星三级 + 焦点衰减
@@ -114,9 +114,9 @@ export default function HolographicNode({ node, groupRef, onClick, onHover, onLe
         />
       </mesh>
 
-      {/* 标签 */}
+      {/* 标签 — 放在节点下方，间距加大 */}
       {showLabel && (
-        <Billboard position={[0, size + 0.8, 0]}>
+        <Billboard position={[0, -size - 1.5, 0]}>
           <Html center style={{ pointerEvents: 'none', opacity: focusOpacity }}>
             <div style={{ width: 120 }} className="flex flex-col items-center">
               <div

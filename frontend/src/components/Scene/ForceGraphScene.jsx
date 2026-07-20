@@ -133,7 +133,7 @@ function AutoFitView({ nodes, layoutStable, controlsRef }) {
  */
 export default function ForceGraphScene({ nodes, edges, introPhase }) {
   const { nodes: simNodes, edges: simEdges, layoutStable, positionsRef } = useForceSimulation(nodes, edges, {
-    charge: -400, linkDistance: 25, collideRadius: 6, depth: 80,
+    charge: -800, linkDistance: 50, collideRadius: 14, depth: 80,
   });
 
   const selectNode = useStore(s => s.selectNode);

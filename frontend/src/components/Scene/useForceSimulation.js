@@ -26,9 +26,9 @@ const TYPE_Z_OFFSET = {
 
 export function useForceSimulation(nodes, edges, options = {}) {
   const {
-    charge = -400,
-    linkDistance = 25,
-    collideRadius = 6,
+    charge = -800,
+    linkDistance = 50,
+    collideRadius = 14,
     depth = 80,
   } = options;
 
@@ -63,7 +63,7 @@ export function useForceSimulation(nodes, edges, options = {}) {
     const sim = forceSimulation(simNodes)
       .velocityDecay(0.4)
       .alphaDecay(0.05)   // 快速收敛，约 50 tick 稳定
-      .force('charge', forceManyBody().strength(d => -300 - (d.heat || 50) / 100 * 400))
+      .force('charge', forceManyBody().strength(d => -500 - (d.heat || 50) / 100 * 600))
       .force('center', forceCenter(0, 0))
       .force('collide', forceCollide(collideRadius))
       .force('link', forceLink(simLinks)
