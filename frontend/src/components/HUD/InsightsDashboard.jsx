@@ -105,18 +105,19 @@ export default function InsightsDashboard({ isMobile }) {
       initial={{ opacity: 0, x: 30 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.5, type: 'spring', stiffness: 200, damping: 25 }}
-      className="fixed z-30 pointer-events-auto"
-      style={{ top: 60, right: 16, width: collapsed ? 44 : 260 }}
+      className="fixed z-50 pointer-events-auto"
+      style={{ top: 60, right: 16, width: collapsed ? 48 : 260 }}
     >
       {/* 折叠/展开按钮 */}
       <button
         onClick={() => setCollapsed(c => !c)}
-        className="w-full mb-2 flex items-center justify-between glass-panel rounded-lg p-2 hover:bg-white/5 transition-colors"
+        className="w-full mb-2 flex items-center justify-center glass-panel rounded-lg p-2.5 hover:bg-white/5 transition-colors"
+        style={{ minHeight: 40 }}
       >
-        <span className="text-[10px] uppercase tracking-wider text-[#8B95A5] font-medium">
+        <span className="text-xs text-[#8B95A5] font-medium">
           {collapsed ? '📊' : '数据面板'}
         </span>
-        {!collapsed && <span className="text-[10px] text-[#4A5568]">收起 ▸</span>}
+        {!collapsed && <span className="text-[10px] text-[#4A5568] ml-auto">收起 ▸</span>}
       </button>
 
       {!collapsed && (
