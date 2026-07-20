@@ -31,6 +31,7 @@ const NODE_LABELS = {
 export default function InsightsDashboard({ isMobile }) {
   const nodes = useStore(s => s.nodes);
   const selectNode = useStore(s => s.selectNode);
+  const [collapsed, setCollapsed] = useState(false);
 
   const stats = useMemo(() => {
     if (!nodes.length) return null;
@@ -98,15 +99,28 @@ export default function InsightsDashboard({ isMobile }) {
     );
   }
 
-  // 桌面端：右侧浮动面板
+  // 桌面端：右侧浮动面板，可折叠
   return (
     <motion.div
       initial={{ opacity: 0, x: 30 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.5, type: 'spring', stiffness: 200, damping: 25 }}
       className="fixed z-30 pointer-events-auto"
-      style={{ top: 60, right: 16, width: 260 }}
+      style={{ top: 60, right: 16, width: collapsed ? 44 : 260 }}
     >
+      {/* 折叠/展开按钮 */}
+      <button
+        onClick={() => setCollapsed(c => !c)}
+        className="w-full mb-2 flex items-center justify-between glass-panel rounded-lg p-2 hover:bg-white/5 transition-colors"
+      >
+        <span className="text-[10px] uppercase tracking-wider text-[#8B95A5] font-medium">
+          {collapsed ? '📊' : '数据面板'}
+        </span>
+        {!collapsed && <span className="text-[10px] text-[#4A5568]">收起 ▸</span>}
+      </button>
+
+      {!collapsed && (
+        <>
       {/* 关键指标卡 */}
       <div className="grid grid-cols-2 gap-1.5 mb-2">
         <MetricCard label="节点总数" value={nodes.length} color="#00F0FF" />
@@ -210,6 +224,8 @@ export default function InsightsDashboard({ isMobile }) {
           ))}
         </div>
       </div>
+        </>
+      )}
     </motion.div>
   );
 }
