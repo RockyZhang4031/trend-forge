@@ -18,9 +18,16 @@ function ScoreBar({ label, value, color }) {
 
 export default function AssetCard({ node }) {
   const asset = node?.asset;
-  if (!asset) return null;
+  if (!asset) {
+    return (
+      <div className="glass-panel rounded-lg p-4 text-center">
+        <div className="text-[#4A5568] text-xs">该节点暂无投资标的信息</div>
+      </div>
+    );
+  }
 
   const color = NODE_COLORS[node.type] || '#00F0FF';
+  const isListed = asset.is_listed !== false;
 
   return (
     <div className="space-y-3">
@@ -28,31 +35,49 @@ export default function AssetCard({ node }) {
       <div className="glass-panel rounded-lg p-3">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <span className="text-base">{asset.is_listed ? '📊' : '🔒'}</span>
+            <span className="text-base">{isListed ? '📈' : '🔒'}</span>
             <div>
-              <div className="text-sm font-bold text-[#E8ECF1]">{node.name}</div>
+              <div className="text-sm font-bold text-[#E8ECF1]">{asset.node_name || node.name}</div>
               <div className="text-[10px] text-[#4A5568]">
-                {asset.is_listed ? '上市公司' : '未上市'}
-                {asset.ticker && ` · ${asset.ticker}`}
-                {asset.exchange && ` · ${asset.exchange}`}
+                {isListed ? '上市公司' : '未上市公司'}
+                {asset.ticker && asset.ticker !== 'null' && ` · ${asset.ticker}`}
+                {asset.exchange && asset.exchange !== 'null' && ` · ${asset.exchange}`}
               </div>
             </div>
           </div>
           {asset.market_cap && (
             <div className="text-right">
               <div className="text-[9px] text-[#4A5568] uppercase">市值</div>
-              <div className="text-sm font-mono font-bold" style={{ color }}>{asset.market_cap}亿</div>
+              <div className="text-sm font-mono font-bold text-[#FFD700]">{asset.market_cap}亿</div>
             </div>
           )}
         </div>
 
-        {/* 评分条 */}
-        <div className="space-y-1.5">
-          <ScoreBar label="敞口" value={asset.exposure_score || 50} color={color} />
+        {/* 三项评分 */}
+        <div className="space-y-1.5 mt-3">
+          <ScoreBar label="敞口" value={asset.exposure_score || 50} color="#6C5CE7" />
           <ScoreBar label="上行" value={asset.upside_score || 50} color="#00D9A5" />
           <ScoreBar label="确定性" value={asset.certainty_score || 50} color="#00F0FF" />
         </div>
       </div>
+
+      {/* 入场点 + 目标收益 */}
+      {(asset.entry_point || asset.target_return) && (
+        <div className="flex gap-2">
+          {asset.entry_point && (
+            <div className="glass-panel rounded-lg p-2 flex-1">
+              <div className="text-[9px] text-[#4A5568] uppercase">入场点</div>
+              <div className="text-xs font-mono text-[#00F0FF]">{asset.entry_point}</div>
+            </div>
+          )}
+          {asset.target_return && (
+            <div className="glass-panel rounded-lg p-2 flex-1">
+              <div className="text-[9px] text-[#4A5568] uppercase">目标回报</div>
+              <div className="text-xs font-mono text-[#00D9A5]">{asset.target_return}</div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 投资逻辑 */}
       {asset.investment_thesis && (

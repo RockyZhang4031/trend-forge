@@ -38,8 +38,18 @@ function Typewriter({ text, speed = 20, onComplete }) {
   );
 }
 
+function MetricChip({ label, value, color }) {
+  return (
+    <div className="glass-panel rounded px-2 py-1 text-center min-w-[60px]">
+      <div className="text-[8px] text-[#4A5568] uppercase">{label}</div>
+      <div className="text-xs font-mono font-bold" style={{ color }}>{value}</div>
+    </div>
+  );
+}
+
 export default function AnalysisPanel({ node }) {
-  const analysis = node?.analysis || useStore(s => s.analyses[node?.id]);
+  const analyses = useStore(s => s.analyses);
+  const analysis = node?.analysis || analyses[node?.id];
   const [expanded, setExpanded] = useState(false);
 
   if (!analysis) {
@@ -51,6 +61,13 @@ export default function AnalysisPanel({ node }) {
   }
 
   const color = NODE_COLORS[node.type] || '#00F0FF';
+
+  // milestones 是数组，每个有 year + event
+  const milestones = analysis.milestones || [];
+  // growth_phases 是数组
+  const growthPhases = analysis.growth_phases || [];
+  // key_metrics 是对象
+  const keyMetrics = analysis.key_metrics || {};
 
   return (
     <div className="space-y-3">
@@ -72,6 +89,30 @@ export default function AnalysisPanel({ node }) {
         </div>
       )}
 
+      {/* 关键指标 */}
+      {Object.keys(keyMetrics).length > 0 && (
+        <div className="glass-panel rounded-lg p-3">
+          <div className="text-[10px] text-[#FFD700] uppercase tracking-wider mb-2 flex items-center gap-1">
+            <span>📊</span> 关键指标
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(keyMetrics).map(([k, v]) => (
+              <MetricChip key={k} label={k} value={v} color="#FFD700" />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 当前阶段 */}
+      {analysis.current_stage && (
+        <div className="glass-panel rounded-lg p-3">
+          <div className="text-[10px] text-[#00F0FF] uppercase tracking-wider mb-1 flex items-center gap-1">
+            <span>📍</span> 当前阶段
+          </div>
+          <p className="text-xs text-[#E8ECF1]">{analysis.current_stage}</p>
+        </div>
+      )}
+
       {/* 关键发现 */}
       {analysis.key_points && analysis.key_points.length > 0 && (
         <div className="glass-panel rounded-lg p-3">
@@ -89,13 +130,37 @@ export default function AnalysisPanel({ node }) {
         </div>
       )}
 
-      {/* 时间窗口 */}
-      {analysis.timeline && (
+      {/* 里程碑 */}
+      {milestones.length > 0 && (
         <div className="glass-panel rounded-lg p-3">
-          <div className="text-[10px] text-[#00F0FF] uppercase tracking-wider mb-1 flex items-center gap-1">
-            <span>⏱</span> 时间窗口
+          <div className="text-[10px] text-[#00F0FF] uppercase tracking-wider mb-2 flex items-center gap-1">
+            <span>⏱</span> 里程碑
           </div>
-          <p className="text-xs text-[#E8ECF1]">{analysis.timeline}</p>
+          <div className="space-y-2">
+            {milestones.map((m, i) => (
+              <div key={i} className="flex gap-2 items-start">
+                <span className="text-[10px] font-mono text-[#00F0FF] shrink-0 mt-0.5">{m.year || m.date || `T+${i}`}</span>
+                <span className="text-xs text-[#E8ECF1] leading-relaxed">{m.event || m.description || m.title || ''}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 增长阶段 */}
+      {growthPhases.length > 0 && (
+        <div className="glass-panel rounded-lg p-3">
+          <div className="text-[10px] text-[#6C5CE7] uppercase tracking-wider mb-2 flex items-center gap-1">
+            <span>📈</span> 增长阶段
+          </div>
+          <div className="space-y-1.5">
+            {growthPhases.map((p, i) => (
+              <div key={i} className="text-xs text-[#E8ECF1] flex gap-2">
+                <span className="text-[#6C5CE7] shrink-0">→</span>
+                <span>{typeof p === 'string' ? p : (p.phase || p.name || '') + ': ' + (p.description || p.detail || '')}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
