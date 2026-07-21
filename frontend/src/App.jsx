@@ -62,10 +62,10 @@ export default function App() {
 
   return (
     <div className="w-screen h-screen overflow-hidden relative" style={{ background: '#05070A' }}>
-      {/* 3D 画布层 */}
+      {/* 3D 画布层 — 报告打开时隐藏，防止 HTML 标签穿透 */}
       <div
         className="absolute top-0 right-0 bottom-0 transition-[left] duration-300 ease-out"
-        style={{ left: canvasLeft }}
+        style={{ left: canvasLeft, visibility: store.reportOpen ? 'hidden' : 'visible' }}
         onPointerDown={(e) => {
           if (e.target.tagName === 'CANVAS' && store.detailPanelOpen) {
             store.closePanel();
