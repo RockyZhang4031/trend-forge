@@ -176,12 +176,27 @@ function SidebarContent({ store, theme, heatScore, themeId }) {
         )}
       </AnimatePresence>
 
-      {/* 折叠按钮 */}
-      <button
-        className="h-10 flex items-center justify-center border-t border-white/[0.06] text-[#8B95A5] hover:text-[#00F0FF] shrink-0 transition-colors"
-        onClick={() => store.toggleSidebar()}>
-        {store.sidebarOpen ? '◀' : '▶'}
-      </button>
+      {/* 趋势报告按钮 + 折叠按钮 */}
+      <div className="shrink-0 border-t border-white/[0.06]">
+        <AnimatePresence>
+          {store.sidebarOpen && (
+            <motion.button
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              onClick={() => store.openReport()}
+              className="w-full flex items-center justify-center gap-2 py-3 text-xs font-medium text-[#00F0FF] hover:bg-[#00F0FF]/10 transition-colors border-b border-white/[0.06]"
+            >
+              <span>📋</span> 趋势报告
+            </motion.button>
+          )}
+        </AnimatePresence>
+        <button
+          className="w-full h-10 flex items-center justify-center text-[#8B95A5] hover:text-[#00F0FF] shrink-0 transition-colors"
+          onClick={() => store.toggleSidebar()}>
+          {store.sidebarOpen ? '◀' : '▶'}
+        </button>
+      </div>
     </>
   );
 }

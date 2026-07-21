@@ -11,6 +11,7 @@ const edgeRoutes = require('./routes/edges');
 const feedRoutes = require('./routes/feeds');
 const commentRoutes = require('./routes/comments');
 const snapshotRoutes = require('./routes/snapshots');
+const analysisRoutes = require('./routes/analyses');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -41,6 +42,7 @@ app.use('/api/edges', edgeRoutes);
 app.use('/api/feeds', feedRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/snapshots', snapshotRoutes);
+app.use('/api/analyses', analysisRoutes);
 
 // ---- Serve Frontend Static Files (with gzip) ----
 const publicDir = path.join(__dirname, '../public');

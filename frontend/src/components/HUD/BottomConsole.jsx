@@ -1,9 +1,14 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../store/useStore';
 
 export default function BottomConsole({ isMobile }) {
   const store = useStore();
+  const nodes = useStore(s => s.nodes);
+  const analyses = useStore(s => s.analyses);
+  const selectNode = useStore(s => s.selectNode);
+  const flyToNode = useStore(s => s.flyToNode);
+
   const [logs, setLogs] = useState([
     { time: '00:00:12', type: 'info', msg: `力导向图布局完成，${store.nodes.length} 节点 ${store.edges.length} 关系` },
     { time: '00:00:10', type: 'success', msg: `主题「${store.currentTheme?.name || '机器人发展探索'}」加载成功` },
@@ -12,61 +17,112 @@ export default function BottomConsole({ isMobile }) {
   ]);
 
   const [visible, setVisible] = useState(false);
-  const [collapsed, setCollapsed] = useState(true); // 默认收起
+  const [collapsed, setCollapsed] = useState(true);
+
+  // 关键论点轮播
+  const [insights, setInsights] = useState([]);
+  const [insightIdx, setInsightIdx] = useState(0);
+  const timerRef = useRef(null);
 
   useEffect(() => {
     if (store.nodes.length > 0) {
       setVisible(true);
       setLogs(prev => [
-        { time: new Date().toLocaleTimeString('zh-CN', { hour12: false }), type: 'success', msg: `${store.nodes.length} 节点 ${store.edges.length} 关系已加载` },
-        ...prev.slice(0, 19),
+        { time: new Date().toLocaleTimeString('zh-CN', { hour12: false }), type: 'success', msg: `主题数据已加载: ${store.nodes.length} 节点` },
+        ...prev,
       ]);
     }
-  }, [store.nodes.length, store.edges.length]);
+  }, [store.nodes.length]);
 
-  if (!visible) return null;
+  // 从 analyses 中提取关键论点
+  useEffect(() => {
+    const items = [];
+    Object.entries(analyses).forEach(([nodeId, a]) => {
+      const node = nodes.find(n => n.id === nodeId);
+      if (!node) return;
+      if (a.conclusion) {
+        items.push({ nodeId, text: a.conclusion, source: node.name });
+      } else if (a.thesis) {
+        items.push({ nodeId, text: a.thesis.substring(0, 60) + '...', source: node.name });
+      }
+    });
+    setInsights(items);
+  }, [analyses, nodes]);
+
+  // 自动轮播
+  useEffect(() => {
+    if (insights.length === 0) return;
+    timerRef.current = setInterval(() => {
+      setInsightIdx(i => (i + 1) % insights.length);
+    }, 8000);
+    return () => clearInterval(timerRef.current);
+  }, [insights.length]);
 
   const colors = {
-    success: '#00D9A5',
-    warn: '#FF6B35',
-    error: '#FF2E63',
-    info: '#8B95A5',
+    info: '#00F0FF', success: '#00D9A5', warning: '#FFD700', error: '#FF2E63',
   };
-
-  // 手机端：高度更小，默认折叠，去掉 paddingLeft
-  const height = isMobile ? (collapsed ? 32 : 80) : (collapsed ? 32 : 120);
-  const paddingLeft = isMobile ? 0 : (store.sidebarOpen ? 300 : 60);
 
   return (
     <motion.div
-      initial={{ height: 0 }}
-      animate={{ height }}
-      className="fixed bottom-0 left-0 right-0 z-40 overflow-hidden"
-      style={{
-        background: 'rgba(5,7,10,0.9)',
-        backdropFilter: 'blur(16px)',
-        borderTop: '1px solid rgba(255,255,255,0.06)',
-        paddingLeft,
-      }}
+      initial={{ y: 60, opacity: 0 }}
+      animate={{ y: visible ? 0 : 60, opacity: visible ? 1 : 0 }}
+      transition={{ delay: 0.5, duration: 0.5 }}
+      className="absolute bottom-0 left-0 right-0 z-30 pointer-events-auto"
+      style={{ marginLeft: isMobile ? 0 : undefined }}
     >
-      <div className="h-full p-3 flex flex-col">
-        <div className="flex items-center justify-between mb-1.5 shrink-0">
-          <button
-            className="text-[10px] uppercase tracking-wider text-[#4A5568] hover:text-[#8B95A5] flex items-center gap-1"
-            onClick={() => setCollapsed(c => !c)}
+      {/* 关键论点字幕条 */}
+      {insights.length > 0 && (
+        <div className="px-3 pb-1">
+          <div
+            className="glass-panel rounded-lg px-3 py-1.5 flex items-center gap-2 cursor-pointer hover:bg-white/5 transition-colors"
+            onClick={() => {
+              const item = insights[insightIdx];
+              if (item) {
+                selectNode(item.nodeId);
+                flyToNode(item.nodeId);
+              }
+            }}
           >
-            <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" style={{ transform: collapsed ? 'rotate(180deg)' : 'none' }}>
-              <path d="M4 0L0 4h8z" />
-            </svg>
-            推演日志
-          </button>
+            <span className="text-[10px] font-mono text-[#00F0FF] shrink-0 animate-pulse">▸</span>
+            <span className="text-[10px] text-[#4A5568] shrink-0">{insights[insightIdx]?.source}</span>
+            <span className="text-[10px] text-[#4A5568] shrink-0">·</span>
+            <div className="flex-1 overflow-hidden">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={insightIdx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                  className="text-[11px] text-[#E8ECF1] block truncate"
+                >
+                  {insights[insightIdx]?.text}
+                </motion.span>
+              </AnimatePresence>
+            </div>
+            <div className="flex gap-0.5 shrink-0">
+              {insights.slice(0, 5).map((_, i) => (
+                <div key={i} className={`w-1 h-1 rounded-full ${i === insightIdx ? 'bg-[#00F0FF]' : 'bg-white/10'}`} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 推演日志 */}
+      <div className="glass-panel mx-3 mb-3 rounded-lg overflow-hidden" style={{ height: collapsed ? 32 : 160 }}>
+        <div className="flex items-center justify-between px-3 py-1.5 cursor-pointer" onClick={() => setCollapsed(!collapsed)}>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-[#4A5568] font-mono shrink-0">CONSOLE</span>
+            <span className="text-[10px] text-[#4A5568]">推演日志</span>
+          </div>
           <div className="flex items-center gap-1">
             <div className="w-1.5 h-1.5 rounded-full animate-pulse bg-[#00D9A5]" />
             <span className="text-[10px] text-[#4A5568]">系统正常</span>
           </div>
         </div>
         {!collapsed && (
-          <div className="flex-1 overflow-y-auto font-mono text-[11px] space-y-0.5">
+          <div className="flex-1 overflow-y-auto font-mono text-[11px] space-y-0.5 px-3 pb-2">
             {logs.map((log, i) => (
               <div key={i} className="flex gap-2">
                 <span className="text-[#4A5568] shrink-0">{log.time}</span>

@@ -8,6 +8,7 @@ import TopStatusBar from './components/HUD/TopStatusBar';
 import NodeDetailHUD from './components/HUD/NodeDetailHUD';
 import BottomConsole from './components/HUD/BottomConsole';
 import InsightsDashboard from './components/HUD/InsightsDashboard';
+import ReportScene from './components/HUD/ReportScene';
 
 export default function App() {
   const store = useStore();
@@ -79,6 +80,7 @@ export default function App() {
       <InsightsDashboard isMobile={isMobile} />
       <NodeDetailHUD themeId={themeId} isMobile={isMobile} />
       <BottomConsole isMobile={isMobile} />
+      <ReportScene />
     </div>
   );
 }

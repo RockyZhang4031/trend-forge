@@ -56,4 +56,14 @@ export const snapshotApi = {
   get: (id) => api.get(`/snapshots/${id}`),
 };
 
+// ---- Analyses ----
+export const analysisApi = {
+  getByTheme: (themeId) => api.get(`/analyses/theme/${themeId}`),
+  getAllByTheme: (themeId) => api.get(`/analyses/theme/${themeId}/all`),
+  getByNode: (nodeId) => api.get(`/analyses/node/${nodeId}`),
+  generateNode: (nodeId, regenerate = false) => api.post(`/analyses/generate/node/${nodeId}`, { regenerate }),
+  generateTheme: (themeId, regenerate = false) => api.post(`/analyses/generate/theme/${themeId}`, { regenerate }),
+  generateAll: (themeId) => api.post(`/analyses/generate/theme/${themeId}/all`, {}),
+};
+
 export default api;
