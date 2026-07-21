@@ -80,8 +80,7 @@ export default function TopStatusBar({ isMobile }) {
             boxShadow: '0 0 12px rgba(0,240,255,0.15)',
           }}
         >
-          <span>📋</span>
-          {!isMobile && <span>趋势报告</span>}
+          <span className="text-[11px] font-medium">{!isMobile && '趋势报告'}</span>
         </button>
 
         <span className="text-[10px] font-mono text-[#4A5568] hidden sm:inline">

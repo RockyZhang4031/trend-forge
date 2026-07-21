@@ -34,11 +34,11 @@ export default function NodeDetailHUD({ themeId, isMobile }) {
 
   // 构建 tabs
   const tabs = [
-    { id: 'detail', label: '📋详情', show: true },
-    { id: 'analysis', label: '🧠分析', show: !!hasAnalysis },
-    { id: 'timeline', label: '⏱时间线', show: !!hasTimeline },
-    { id: 'asset', label: '📊投资', show: hasAsset },
-    { id: 'comment', label: '💬评论', show: true },
+    { id: 'detail', label: '详情', show: true },
+    { id: 'analysis', label: '分析', show: !!hasAnalysis },
+    { id: 'timeline', label: '时间线', show: !!hasTimeline },
+    { id: 'asset', label: '投资', show: hasAsset },
+    { id: 'comment', label: '评论', show: true },
   ].filter(t => t.show);
 
   // 确保 rightPanelTab 在可见 tabs 中

@@ -206,14 +206,14 @@ function Scene({ sceneIdx, report, assets, nodes, analyses }) {
           {/* 五维分数条 - 不只是数字，还有可视化条 */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="mt-8 w-full max-w-lg space-y-3">
             {[
-              { label: '技术成熟度', value: scores.technology || 80, color: '#00F0FF', icon: '⚙️' },
-              { label: '资源充裕度', value: scores.resource || 75, color: '#FFD700', icon: '💎' },
-              { label: '资本投入', value: scores.capital || 85, color: '#6C5CE7', icon: '💰' },
-              { label: '确定性', value: scores.certainty || 90, color: '#00D9A5', icon: '🎯' },
-              { label: '政策支持', value: scores.policy || 65, color: '#FF6B35', icon: '📋' },
+              { label: '技术成熟度', value: scores.technology || 80, color: '#00F0FF' },
+              { label: '资源充裕度', value: scores.resource || 75, color: '#FFD700' },
+              { label: '资本投入', value: scores.capital || 85, color: '#6C5CE7' },
+              { label: '确定性', value: scores.certainty || 90, color: '#00D9A5' },
+              { label: '政策支持', value: scores.policy || 65, color: '#FF6B35' },
             ].map((s, i) => (
               <motion.div key={s.label} initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 1 + i * 0.15 }} className="flex items-center gap-3">
-                <span className="text-sm shrink-0 w-4">{s.icon}</span>
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: s.color, boxShadow: `0 0 6px ${s.color}` }} />
                 <span className="text-[11px] text-[#8B95A5] shrink-0 w-20">{s.label}</span>
                 <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
                   <motion.div
@@ -271,17 +271,17 @@ function Scene({ sceneIdx, report, assets, nodes, analyses }) {
     // 第3幕: 关键发现 - 带图标分类
     case 2:
       const categories = [
-        { keyword: ['技术', '算法', '模型', '智能'], icon: '⚙️', color: '#00F0FF' },
-        { keyword: ['市场', '规模', '增长', '需求'], icon: '📈', color: '#00D9A5' },
-        { keyword: ['稀缺', '资源', '材料', '芯片'], icon: '💎', color: '#FFD700' },
-        { keyword: ['公司', '企业', '特斯拉', '投资'], icon: '🏢', color: '#6C5CE7' },
-        { keyword: ['风险', '挑战', '不确定'], icon: '⚠', color: '#FF2E63' },
+        { keyword: ['技术', '算法', '模型', '智能'], color: '#00F0FF' },
+        { keyword: ['市场', '规模', '增长', '需求'], color: '#00D9A5' },
+        { keyword: ['稀缺', '资源', '材料', '芯片'], color: '#FFD700' },
+        { keyword: ['公司', '企业', '特斯拉', '投资'], color: '#6C5CE7' },
+        { keyword: ['风险', '挑战', '不确定'], color: '#FF2E63' },
       ];
       const categorize = (text) => {
         for (const cat of categories) {
           if (cat.keyword.some(k => text.includes(k))) return cat;
         }
-        return { icon: '💡', color: '#8B95A5' };
+        return { color: '#8B95A5' };
       };
 
       return (
@@ -299,9 +299,7 @@ function Scene({ sceneIdx, report, assets, nodes, analyses }) {
                   className="glass-panel rounded-lg p-3 flex items-start gap-3"
                   style={{ borderLeft: `2px solid ${cat.color}` }}
                 >
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-sm" style={{ background: `${cat.color}15` }}>
-                    {cat.icon}
-                  </div>
+                  <div className="w-2 h-2 rounded-full shrink-0 mt-1.5" style={{ background: cat.color, boxShadow: `0 0 6px ${cat.color}` }} />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-[#E8ECF1] leading-relaxed">{finding}</p>
                   </div>
@@ -341,7 +339,7 @@ function Scene({ sceneIdx, report, assets, nodes, analyses }) {
                     <div className="text-2xl font-mono font-bold" style={{ color }}>{t.score}</div>
                   </div>
                   <div className="text-[10px] text-[#4A5568] mb-2">
-                    {isListed ? '📈 上市' : '🔒 未上市'}
+                    {isListed ? '上市' : '未上市'}
                     {assetData?.ticker && assetData.ticker !== 'null' && ` · ${assetData.ticker}`}
                     {assetData?.exchange && assetData.exchange !== 'null' && ` · ${assetData.exchange}`}
                   </div>
@@ -381,7 +379,7 @@ function Scene({ sceneIdx, report, assets, nodes, analyses }) {
           {/* 风险提示 */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }} className="max-w-2xl px-4">
             <div className="glass-panel rounded-lg p-3 flex items-start gap-2" style={{ borderLeft: '2px solid #FF2E63' }}>
-              <span className="text-sm">⚠</span>
+              <span className="w-2 h-2 rounded-full" style={{ background: '#FF2E63', boxShadow: '0 0 6px #FF2E63' }} />
               <p className="text-[10px] text-[#8B95A5] leading-relaxed">以上标的仅供参考分析，不构成投资建议。未上市公司存在流动性风险，投资前请做好独立判断。</p>
             </div>
           </motion.div>
@@ -496,7 +494,7 @@ export default function ReportScene() {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[90] flex flex-col"
-        style={{ background: 'rgba(5, 7, 10, 0.98)', backdropFilter: 'blur(20px)' }}
+        style={{ background: '#05070A' }}
       >
         {/* 顶部进度条 */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] shrink-0">
