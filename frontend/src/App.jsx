@@ -89,16 +89,15 @@ export default function App() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
           transition={{ delay: 1, duration: 0.8 }}
-          className="fixed left-1/2 -translate-x-1/2 z-30 pointer-events-none"
+          className="fixed left-1/2 -translate-x-1/2 z-30 pointer-events-none px-2"
           style={{ bottom: isMobile ? 60 : 80 }}
         >
-          <div className="glass-panel rounded-full px-5 py-2 flex items-center gap-3"
+          <div className="glass-panel rounded-full px-4 py-2 flex items-center gap-2 flex-wrap justify-center"
             style={{ background: 'rgba(0,240,255,0.05)', border: '1px solid rgba(0,240,255,0.15)' }}>
             <span className="text-[11px] text-[#8B95A5]">点击节点查看详情</span>
             <span className="text-[#4A5568]">·</span>
             <span className="text-[11px] text-[#8B95A5]">右上角</span>
             <span className="text-[11px] text-[#00F0FF]">趋势报告</span>
-            <span className="text-[11px] text-[#8B95A5]">查看完整分析</span>
           </div>
         </motion.div>
       )}

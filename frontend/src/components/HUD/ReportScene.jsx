@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../store/useStore';
+import { useResponsive } from '../../hooks/useResponsive';
 
 function CountUp({ target, duration = 1500, suffix = '' }) {
   const [val, setVal] = useState(0);
@@ -22,8 +23,7 @@ function CountUp({ target, duration = 1500, suffix = '' }) {
   return <span>{val}{suffix}</span>;
 }
 
-function RadarChart({ data, color = '#00F0FF' }) {
-  const size = 280;
+function RadarChart({ data, color = '#00F0FF', size = 280 }) {
   const center = size / 2;
   const maxR = 95;
   const angleStep = (Math.PI * 2) / data.length;
@@ -158,7 +158,7 @@ function FullTimeline({ milestones }) {
   );
 }
 
-function Scene({ sceneIdx, report, assets, nodes, analyses }) {
+function Scene({ sceneIdx, report, assets, nodes, analyses, isMobile }) {
   const selectNode = useStore(s => s.selectNode);
   const flyToNode = useStore(s => s.flyToNode);
   const closeReport = useStore(s => s.closeReport);
@@ -193,7 +193,7 @@ function Scene({ sceneIdx, report, assets, nodes, analyses }) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[65vh] w-full max-w-3xl mx-auto">
           <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', damping: 20 }} className="relative">
-            <div className="text-8xl font-mono font-bold" style={{ color: '#00F0FF', textShadow: '0 0 60px #00F0FF60' }}>
+            <div className={`font-mono font-bold ${isMobile ? 'text-6xl' : 'text-8xl'}`} style={{ color: '#00F0FF', textShadow: '0 0 60px #00F0FF60' }}>
               <CountUp target={report.overall_score || 85} />
             </div>
             <div className="absolute -inset-8 rounded-full" style={{ boxShadow: '0 0 80px #00F0FF20' }} />
@@ -243,7 +243,7 @@ function Scene({ sceneIdx, report, assets, nodes, analyses }) {
               { label: '人才', value: scarcity.talent || 70 },
               { label: '资本', value: scarcity.capital || 85 },
               { label: '政策', value: scarcity.policy || 65 },
-            ]} />
+            ]} size={isMobile ? 220 : 280} />
           </motion.div>
           {/* 五维解读 */}
           <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 1 }} className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-2 max-w-2xl">
@@ -316,7 +316,7 @@ function Scene({ sceneIdx, report, assets, nodes, analyses }) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[65vh] w-full">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-base text-[#6C5CE7] uppercase tracking-wider mb-6">投资标的</motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 max-w-4xl w-full px-4 mb-6">
+          <div className={`grid gap-3 max-w-4xl w-full px-4 mb-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'}`}>
             {targets.map((t, i) => {
               const assetData = assets.find(a => a.node_name === t.name);
               const isListed = assetData?.is_listed ?? true;
@@ -456,6 +456,7 @@ export default function ReportScene() {
   const nodes = useStore(s => s.nodes);
   const analyses = useStore(s => s.analyses);
   const currentTheme = useStore(s => s.currentTheme);
+  const { isMobile } = useResponsive();
 
   const [sceneIdx, setSceneIdx] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);
@@ -517,13 +518,14 @@ export default function ReportScene() {
         </div>
 
         {/* 内容区 */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className={`flex-1 overflow-y-auto ${isMobile ? 'p-3' : 'p-6'}`}>
           <Scene
             sceneIdx={sceneIdx}
             report={parsed}
             assets={assets}
             nodes={nodes}
             analyses={analyses}
+            isMobile={isMobile}
           />
         </div>
 
@@ -537,7 +539,7 @@ export default function ReportScene() {
             ◀ 上一幕
           </button>
 
-          <div className="text-[10px] text-[#4A5568]">
+          <div className={`text-[10px] text-[#4A5568] ${isMobile ? 'hidden' : ''}`}>
             {currentTheme?.name} · 趋势简报
           </div>
 

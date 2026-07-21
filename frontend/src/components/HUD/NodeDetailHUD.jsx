@@ -94,13 +94,14 @@ export default function NodeDetailHUD({ themeId, isMobile }) {
               </div>
             </div>
 
-            {/* Tabs */}
-            <div className="shrink-0 flex border-b border-white/[0.06] px-2">
+            {/* Tabs — 移动端可横滚 */}
+            <div className={`shrink-0 flex border-b border-white/[0.06] ${isMobile ? 'overflow-x-auto' : 'px-2'}`}
+              style={isMobile ? { scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } : {}}>
               {tabs.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => store.setPanelTab(tab.id)}
-                  className={`px-3 py-2 text-[11px] transition-colors border-b-2 ${
+                  className={`px-3 py-2 text-[11px] transition-colors border-b-2 whitespace-nowrap shrink-0 ${
                     activeTab === tab.id
                       ? 'text-[#00F0FF] border-[#00F0FF]'
                       : 'text-[#4A5568] border-transparent hover:text-[#8B95A5]'
