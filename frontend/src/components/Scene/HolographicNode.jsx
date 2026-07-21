@@ -71,8 +71,8 @@ export default function HolographicNode({ node, groupRef, onClick, onHover, onLe
   const geometry = SHARED_GEO[node.type] || SHARED_GEO.concept;
   const wireGeometry = SHARED_WIRE_GEO[node.type] || SHARED_WIRE_GEO.concept;
 
-  // 标签显示策略
-  const showLabel = isCenter || isSelected || isHovered || (!selectedNodeId && tier === 'medium');
+  // 标签显示策略：默认只显示恒星，其余 hover/选中才显示
+  const showLabel = isCenter || isSelected || isHovered;
 
   return (
     <group
