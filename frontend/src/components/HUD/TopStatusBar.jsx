@@ -28,7 +28,6 @@ export default function TopStatusBar({ isMobile }) {
     navigator.clipboard.writeText(window.location.href).then(() => alert('链接已复制'));
   };
 
-  // 手机端：不留左侧 padding，简化布局
   const paddingLeft = isMobile ? 12 : (store.sidebarOpen ? 316 : 76);
 
   return (
@@ -39,7 +38,7 @@ export default function TopStatusBar({ isMobile }) {
         borderBottom: '1px solid rgba(255,255,255,0.06)',
         paddingLeft,
       }}>
-      {/* 手机端：菜单按钮 */}
+      {/* 手机端菜单 */}
       {isMobile && (
         <button
           className="mr-2 p-1.5 rounded text-[#8B95A5] hover:text-[#00F0FF] shrink-0"
@@ -53,7 +52,7 @@ export default function TopStatusBar({ isMobile }) {
         </button>
       )}
 
-      {/* 中间 */}
+      {/* 中间信息 */}
       <div className="flex-1 flex items-center gap-3 min-w-0">
         <span className="text-xs font-medium text-[#8B95A5] truncate">{store.currentTheme?.name || ''}</span>
         <div className="h-3 w-px bg-white/[0.06] shrink-0" />
@@ -68,8 +67,23 @@ export default function TopStatusBar({ isMobile }) {
         )}
       </div>
 
-      {/* 右侧 */}
+      {/* 右侧按钮 */}
       <div className="flex items-center gap-1.5 shrink-0">
+        {/* 趋势报告 - 醒目按钮 */}
+        <button
+          onClick={() => store.openReport()}
+          className="px-3 py-1.5 rounded-lg text-[11px] font-medium flex items-center gap-1.5 transition-all"
+          style={{
+            background: 'linear-gradient(135deg, rgba(0,240,255,0.15), rgba(0,217,165,0.15))',
+            color: '#00F0FF',
+            border: '1px solid rgba(0,240,255,0.3)',
+            boxShadow: '0 0 12px rgba(0,240,255,0.15)',
+          }}
+        >
+          <span>📋</span>
+          {!isMobile && <span>趋势报告</span>}
+        </button>
+
         <span className="text-[10px] font-mono text-[#4A5568] hidden sm:inline">
           {time.toLocaleTimeString('zh-CN', { hour12: false })}
         </span>

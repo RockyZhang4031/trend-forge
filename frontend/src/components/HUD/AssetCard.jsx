@@ -53,25 +53,25 @@ export default function AssetCard({ node }) {
           )}
         </div>
 
-        {/* 三项评分 */}
-        <div className="space-y-1.5 mt-3">
-          <ScoreBar label="敞口" value={asset.exposure_score || 50} color="#6C5CE7" />
+        {/* 评分条 */}
+        <div className="space-y-1.5 mt-2">
+          <ScoreBar label="敞口" value={asset.exposure_score || 50} color="#00F0FF" />
           <ScoreBar label="上行" value={asset.upside_score || 50} color="#00D9A5" />
-          <ScoreBar label="确定性" value={asset.certainty_score || 50} color="#00F0FF" />
+          <ScoreBar label="确定性" value={asset.certainty_score || 50} color="#6C5CE7" />
         </div>
       </div>
 
-      {/* 入场点 + 目标收益 */}
+      {/* 入场点 + 目标回报 */}
       {(asset.entry_point || asset.target_return) && (
-        <div className="flex gap-2">
+        <div className="glass-panel rounded-lg p-3 flex gap-4">
           {asset.entry_point && (
-            <div className="glass-panel rounded-lg p-2 flex-1">
+            <div className="flex-1">
               <div className="text-[9px] text-[#4A5568] uppercase">入场点</div>
               <div className="text-xs font-mono text-[#00F0FF]">{asset.entry_point}</div>
             </div>
           )}
           {asset.target_return && (
-            <div className="glass-panel rounded-lg p-2 flex-1">
+            <div className="flex-1">
               <div className="text-[9px] text-[#4A5568] uppercase">目标回报</div>
               <div className="text-xs font-mono text-[#00D9A5]">{asset.target_return}</div>
             </div>
